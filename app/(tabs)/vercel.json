@@ -1,0 +1,33 @@
+{
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/" }
+  ],
+  "outputDirectory": "dist"
+}
+```
+
+---
+
+**Step 4 — Save**
+
+Press `Ctrl + S`
+
+---
+
+**Step 5 — Push to GitHub**
+
+In the terminal paste these one at a time and press Enter after each:
+
+**Command 1:**
+```
+git add .
+```
+
+**Command 2:**
+```
+git commit -m "Add vercel config"
+```
+
+**Command 3:**
+```
+git push
