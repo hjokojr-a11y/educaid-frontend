@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
@@ -24,6 +24,20 @@ export default function StudentDashboardScreen() {
   const [dataLoading, setDataLoading] = useState(false);
 
   const T = session?.user?.school?.theme || { primary: '#1a7a6e', secondary: '#e8b24a', dark: '#0f1923' };
+
+  useEffect(() => {
+    if (user) {
+      const interval = setInterval(() => {
+        loadAttendance();
+        loadAcademic();
+        loadHomework();
+        loadSports();
+        loadAnnouncements();
+        loadAlerts();
+      }, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   async function loadSchools() {
     setLoadingSchools(true);
