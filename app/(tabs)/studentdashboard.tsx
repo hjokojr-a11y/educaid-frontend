@@ -1,114 +1,113 @@
 import { useState, useEffect } from 'react';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  ActivityIndicator, Alert, ScrollView,
+  StyleSheet, Text, TextInput, TouchableOpacity, View
+} from 'react-native';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
 
-export default function StudentDashboardScreen() {
-  const [step, setStep]           = useState('login');
-  const [studentCode, setStudentCode] = useState('');
-  const [password, setPassword]   = useState('');
-  const [loading, setLoading]     = useState(false);
-  const [session, setSession]     = useState(null);
-  const [tab, setTab]             = useState('home');
-  const [schools, setSchools]     = useState([]);
-  const [selectedSchool, setSelectedSchool] = useState(null);
-  const [loadingSchools, setLoadingSchools] = useState(false);
+const C = {
+  bg: '#0A0F1E', surface: '#111827', card: '#1A2235', border: '#1F2D45',
+  primary: '#00C896', blue: '#3B82F6', purple: '#8B5CF6', red: '#EF4444',
+  amber: '#F59E0B', text: '#F1F5F9', muted: '#64748B', subtle: '#334155',
+};
 
-  // Data
-  const [attendance, setAttendance]   = useState([]);
-  const [academic, setAcademic]       = useState([]);
-  const [homework, setHomework]       = useState([]);
-  const [sports, setSports]           = useState([]);
-  const [announcements, setAnnouncements] = useState([]);
-  const [alerts, setAlerts]           = useState([]);
+function Tag({ label, color }: any) {
+  return (
+    <View style={{ backgroundColor: color + '22', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 3 }}>
+      <Text style={{ color, fontSize: 10, fontWeight: '700', letterSpacing: 0.5 }}>{label}</Text>
+    </View>
+  );
+}
+
+function Empty({ icon, msg }: any) {
+  return (
+    <View style={DS.empty}>
+      <Text style={{ fontSize: 36, marginBottom: 12 }}>{icon}</Text>
+      <Text style={DS.emptyTxt}>{msg}</Text>
+    </View>
+  );
+}
+
+export default function StudentDashboardScreen() {
+  const [step, setStep] = useState('login');
+  const [studentCode, setStudentCode] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPw, setShowPw] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [session, setSession] = useState<any>(null);
+  const [tab, setTab] = useState('home');
+  const [schools, setSchools] = useState<any[]>([]);
+  const [selectedSchool, setSelectedSchool] = useState<any>(null);
+  const [loadingSchools, setLoadingSchools] = useState(false);
+  const [attendance, setAttendance] = useState<any[]>([]);
+  const [academic, setAcademic] = useState<any[]>([]);
+  const [homework, setHomework] = useState<any[]>([]);
+  const [sports, setSports] = useState<any[]>([]);
+  const [announcements, setAnnouncements] = useState<any[]>([]);
+  const [alerts, setAlerts] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
 
-  const T = session?.user?.school?.theme || { primary: '#1a7a6e', secondary: '#e8b24a', dark: '#0f1923' };
-
-  // Auto refresh every 30 seconds when logged in
   useEffect(() => {
     if (session) {
-      const interval = setInterval(() => {
-        refreshData(session.token, session.user);
-      }, 30000);
+      const interval = setInterval(() => refreshData(session.token, session.user), 30000);
       return () => clearInterval(interval);
     }
   }, [session]);
 
-  async function refreshData(token, user) {
-    const headers = { Authorization: `Bearer ${token}` };
-    const studentId = user.id;
+  async function refreshData(token: string, user: any) {
+    const h = { Authorization: `Bearer ${token}` };
+    const id = user.id;
     try {
-      const attRes = await fetch(`${API_URL}/student/${studentId}/attendance`, { headers });
-      if (attRes.ok) { const d = await attRes.json(); setAttendance(d.attendance || []); }
-      const acaRes = await fetch(`${API_URL}/student/${studentId}/academic`, { headers });
-      if (acaRes.ok) { const d = await acaRes.json(); setAcademic(d.reports || []); }
-      const hwRes = await fetch(`${API_URL}/student/${studentId}/homework`, { headers });
-      if (hwRes.ok) { const d = await hwRes.json(); setHomework(d.homework || []); }
-      const spRes = await fetch(`${API_URL}/student/${studentId}/sports`, { headers });
-      if (spRes.ok) { const d = await spRes.json(); setSports(d.assessments || []); }
-      const annRes = await fetch(`${API_URL}/student/${studentId}/announcements`, { headers });
-      if (annRes.ok) { const d = await annRes.json(); setAnnouncements(d.announcements || []); }
-      const alRes = await fetch(`${API_URL}/student/${studentId}/alerts`, { headers });
-      if (alRes.ok) { const d = await alRes.json(); setAlerts(d.alerts || []); }
-    } catch (err) { console.log("Refresh error:", err); }
+      const [a, ac, hw, sp, ann, al] = await Promise.all([
+        fetch(`${API_URL}/student/${id}/attendance`, { headers: h }),
+        fetch(`${API_URL}/student/${id}/academic`, { headers: h }),
+        fetch(`${API_URL}/student/${id}/homework`, { headers: h }),
+        fetch(`${API_URL}/student/${id}/sports`, { headers: h }),
+        fetch(`${API_URL}/student/${id}/announcements`, { headers: h }),
+        fetch(`${API_URL}/student/${id}/alerts`, { headers: h }),
+      ]);
+      if (a.ok)   { const d = await a.json();   setAttendance(d.attendance || []); }
+      if (ac.ok)  { const d = await ac.json();  setAcademic(d.reports || []); }
+      if (hw.ok)  { const d = await hw.json();  setHomework(d.homework || []); }
+      if (sp.ok)  { const d = await sp.json();  setSports(d.assessments || []); }
+      if (ann.ok) { const d = await ann.json(); setAnnouncements(d.announcements || []); }
+      if (al.ok)  { const d = await al.json();  setAlerts(d.alerts || []); }
+    } catch {}
   }
 
   async function loadSchools() {
     setLoadingSchools(true);
     try {
-      const res = await fetch(`${API_URL}/auth/super/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: "hjokojr@gmail.com", password: "EducAid2024!" })
+      const r1 = await fetch(`${API_URL}/auth/super/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: 'hjokojr@gmail.com', password: 'EducAid2024!' }),
       });
-      const auth = await res.json();
-      const res2 = await fetch(`${API_URL}/auth/super/schools`, {
-        headers: { Authorization: `Bearer ${auth.token}` }
-      });
-      const data = await res2.json();
-      setSchools(data.schools || []);
-    } catch { Alert.alert("Error", "Cannot connect to server."); }
+      const auth = await r1.json();
+      const r2 = await fetch(`${API_URL}/auth/super/schools`, { headers: { Authorization: `Bearer ${auth.token}` } });
+      const d = await r2.json();
+      setSchools(d.schools || []);
+    } catch { Alert.alert('Error', 'Cannot connect to server.'); }
     setLoadingSchools(false);
   }
 
   async function login() {
-    if (!studentCode || !password) { Alert.alert("Error", "Enter Student ID and password"); return; }
+    if (!studentCode || !password) { Alert.alert('Error', 'Enter Student ID and password'); return; }
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/student/login`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ studentCode, password, schoolId: selectedSchool?.id })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentCode, password, schoolId: selectedSchool?.id }),
       });
       const data = await res.json();
-      if (!res.ok) { Alert.alert("Login Failed", data.error || "Invalid credentials"); setLoading(false); return; }
+      if (!res.ok) { Alert.alert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
       setSession({ token: data.token, user: data.user });
       setStep('dashboard');
-      setLoading(false);
-      loadDashboardData(data.token, data.user);
-    } catch { Alert.alert("Error", "Cannot connect to server."); setLoading(false); }
-  }
-
-  async function loadDashboardData(token, user) {
-    setDataLoading(true);
-    const headers = { Authorization: `Bearer ${token}` };
-    const studentId = user.id;
-    try {
-      const attRes = await fetch(`${API_URL}/student/${studentId}/attendance`, { headers });
-      if (attRes.ok) { const d = await attRes.json(); setAttendance(d.attendance || []); }
-      const acaRes = await fetch(`${API_URL}/student/${studentId}/academic`, { headers });
-      if (acaRes.ok) { const d = await acaRes.json(); setAcademic(d.reports || []); }
-      const hwRes = await fetch(`${API_URL}/student/${studentId}/homework`, { headers });
-      if (hwRes.ok) { const d = await hwRes.json(); setHomework(d.homework || []); }
-      const spRes = await fetch(`${API_URL}/student/${studentId}/sports`, { headers });
-      if (spRes.ok) { const d = await spRes.json(); setSports(d.assessments || []); }
-      const annRes = await fetch(`${API_URL}/student/${studentId}/announcements`, { headers });
-      if (annRes.ok) { const d = await annRes.json(); setAnnouncements(d.announcements || []); }
-      const alRes = await fetch(`${API_URL}/student/${studentId}/alerts`, { headers });
-      if (alRes.ok) { const d = await alRes.json(); setAlerts(d.alerts || []); }
-    } catch (err) { console.log("Data load error:", err); }
-    setDataLoading(false);
+      setDataLoading(true);
+      await refreshData(data.token, data.user);
+      setDataLoading(false);
+    } catch { Alert.alert('Error', 'Cannot connect to server.'); }
+    setLoading(false);
   }
 
   function logout() {
@@ -119,393 +118,330 @@ export default function StudentDashboardScreen() {
   }
 
   const user = session?.user;
+  const accent = selectedSchool?.theme_primary || user?.school?.theme?.primary || C.primary;
 
-  // School selection
   if (step === 'selectSchool') {
     return (
-      <View style={[styles.container, { backgroundColor: '#0f1923' }]}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <TouchableOpacity onPress={() => setStep('login')} style={styles.backBtn}>
-            <Text style={styles.backText}>← Back</Text>
+      <View style={[DS.fill, { backgroundColor: C.bg }]}>
+        <ScrollView contentContainerStyle={DS.scroll}>
+          <TouchableOpacity onPress={() => setStep('login')} style={DS.back}>
+            <Text style={DS.backTxt}>← Back</Text>
           </TouchableOpacity>
-          <Text style={styles.pageTitle}>Select Your School</Text>
-          {loadingSchools ? (
-            <ActivityIndicator color="#1a7a6e" size="large" style={{ marginTop: 40 }} />
-          ) : (
-            schools.map(school => (
-              <TouchableOpacity
-                key={school.id}
-                style={styles.schoolCard}
-                onPress={() => { setSelectedSchool(school); setStep('login'); }}>
-                <View style={[styles.dot, { backgroundColor: school.theme_primary || '#1a7a6e' }]} />
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.schoolName}>{school.name}</Text>
-                  <Text style={styles.schoolCat}>{school.category}</Text>
-                </View>
-                <Text style={styles.arrow}>›</Text>
-              </TouchableOpacity>
-            ))
-          )}
+          <Text style={DS.h1}>Select School</Text>
+          {loadingSchools
+            ? <ActivityIndicator color={C.primary} size="large" style={{ marginTop: 40 }} />
+            : schools.map((sc: any) => (
+                <TouchableOpacity key={sc.id} style={DS.schoolRow}
+                  onPress={() => { setSelectedSchool(sc); setStep('login'); }}>
+                  <View style={[DS.dot, { backgroundColor: sc.theme_primary || C.primary }]} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={DS.schoolName}>{sc.name}</Text>
+                    <Text style={DS.schoolSub}>{sc.category}</Text>
+                  </View>
+                  <Text style={{ color: C.muted, fontSize: 20 }}>›</Text>
+                </TouchableOpacity>
+              ))
+          }
         </ScrollView>
       </View>
     );
   }
 
-  // Login
   if (step === 'login') {
     return (
-      <View style={[styles.container, { backgroundColor: '#0f1923' }]}>
-        <ScrollView contentContainerStyle={styles.scroll}>
-          <Text style={styles.appTitle}>EducAid</Text>
-          <Text style={styles.appSub}>Student & Parent Portal</Text>
+      <View style={[DS.fill, { backgroundColor: C.bg }]}>
+        <ScrollView contentContainerStyle={DS.scroll} keyboardShouldPersistTaps="handled">
+          <View style={DS.loginHeader}>
+            <View style={[DS.loginBadge, { backgroundColor: C.primary + '18', borderColor: C.primary + '44' }]}>
+              <Text style={[DS.loginBadgeE, { color: C.primary }]}>E</Text>
+            </View>
+            <Text style={DS.loginTitle}>Student Portal</Text>
+            <Text style={DS.loginSub}>Sign in to view your school records</Text>
+          </View>
 
           {selectedSchool ? (
             <TouchableOpacity
-              style={[styles.schoolBadge, { backgroundColor: selectedSchool.theme_primary || '#1a7a6e' }]}
+              style={[DS.schoolPill, { backgroundColor: accent + '18', borderColor: accent + '44' }]}
               onPress={() => { setStep('selectSchool'); loadSchools(); }}>
-              <Text style={styles.schoolBadgeName}>{selectedSchool.name}</Text>
-              <Text style={styles.schoolBadgeChange}>Change →</Text>
+              <View style={[DS.dot, { backgroundColor: accent }]} />
+              <Text style={[DS.schoolPillName, { color: accent }]}>{selectedSchool.name}</Text>
+              <Text style={DS.schoolPillChange}>Change →</Text>
             </TouchableOpacity>
           ) : (
-            <TouchableOpacity
-              style={styles.selectSchoolBtn}
+            <TouchableOpacity style={DS.selectBtn}
               onPress={() => { setStep('selectSchool'); loadSchools(); }}>
-              <Text style={styles.selectSchoolText}>🏫 Select Your School</Text>
+              <Text style={DS.selectBtnTxt}>🏫  Select Your School</Text>
             </TouchableOpacity>
           )}
 
-          <Text style={styles.label}>Student ID</Text>
-          <View style={styles.inputWrap}>
-            <Text style={styles.inputIcon}>🎓</Text>
-            <TextInput
-              style={styles.inputInner}
-              placeholder="e.g. LYC-0002"
-              placeholderTextColor="#7a7066"
-              value={studentCode}
-              onChangeText={setStudentCode}
-              autoCapitalize="none"
-            />
+          <Text style={DS.label}>STUDENT ID</Text>
+          <View style={DS.inputBox}>
+            <TextInput style={DS.inputTxt} placeholder="e.g. LYC-0002"
+              placeholderTextColor={C.muted} value={studentCode}
+              onChangeText={setStudentCode} autoCapitalize="none" />
           </View>
 
-          <Text style={styles.label}>Password</Text>
-          <View style={styles.inputWrap}>
-            <Text style={styles.inputIcon}>🔒</Text>
-            <TextInput
-              style={styles.inputInner}
-              placeholder="Your password"
-              placeholderTextColor="#7a7066"
-              value={password}
-              onChangeText={setPassword}
-              secureTextEntry
-            />
+          <Text style={DS.label}>PASSWORD</Text>
+          <View style={DS.inputBox}>
+            <TextInput style={[DS.inputTxt, { flex: 1 }]} placeholder="Your password"
+              placeholderTextColor={C.muted} value={password}
+              onChangeText={setPassword} secureTextEntry={!showPw} />
+            <TouchableOpacity onPress={() => setShowPw(!showPw)}>
+              <Text style={{ color: C.muted, fontSize: 13 }}>{showPw ? 'Hide' : 'Show'}</Text>
+            </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={[styles.loginBtn, { backgroundColor: selectedSchool?.theme_primary || '#1a7a6e', opacity: !selectedSchool ? 0.5 : 1 }]}
-            onPress={login}
-            disabled={loading || !selectedSchool}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.loginBtnText}>Sign In →</Text>}
+            style={[DS.btn, { backgroundColor: selectedSchool ? accent : C.subtle, opacity: !selectedSchool ? 0.6 : 1 }]}
+            onPress={login} disabled={loading || !selectedSchool}>
+            {loading ? <ActivityIndicator color="#fff" /> : <Text style={DS.btnTxt}>Sign In →</Text>}
           </TouchableOpacity>
 
-          {!selectedSchool && (
-            <Text style={styles.hint}>Please select your school first</Text>
-          )}
+          {!selectedSchool && <Text style={DS.hint}>Please select your school first</Text>}
         </ScrollView>
       </View>
     );
   }
 
-  // Dashboard
+  const TABS = [
+    { id: 'home',       icon: '⊞',  label: 'Home' },
+    { id: 'attendance', icon: '📅', label: 'Attend.' },
+    { id: 'academic',   icon: '📚', label: 'Grades' },
+    { id: 'homework',   icon: '📝', label: 'HW' },
+    { id: 'sports',     icon: '🏃', label: 'Sports' },
+    { id: 'announce',   icon: '📢', label: 'News' },
+    { id: 'alerts',     icon: '🚨', label: 'Alerts' },
+  ];
+
+  const userAccent = user?.school?.theme?.primary || C.primary;
+
   return (
-    <View style={[styles.container, { backgroundColor: '#f5f0e8' }]}>
-      {/* Header */}
-      <View style={[styles.header, { backgroundColor: T.dark }]}>
-        <View style={[styles.avatar, { backgroundColor: T.primary }]}>
-          <Text style={styles.avatarText}>{user?.initials || user?.name?.[0] || '?'}</Text>
+    <View style={[DS.fill, { backgroundColor: C.bg }]}>
+      <View style={DS.header}>
+        <View style={[DS.avatar, { backgroundColor: userAccent + '22', borderColor: userAccent + '55' }]}>
+          <Text style={[DS.avatarTxt, { color: userAccent }]}>
+            {user?.initials || user?.name?.[0] || '?'}
+          </Text>
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={styles.headerName}>{user?.name}</Text>
-          <Text style={styles.headerSub}>{user?.class?.name} · {user?.school?.name}</Text>
+          <Text style={DS.headerName}>{user?.name}</Text>
+          <Text style={DS.headerSub}>{user?.class?.name} · {user?.school?.name}</Text>
         </View>
-        <TouchableOpacity onPress={logout} style={styles.signOutBtn}>
-          <Text style={styles.signOutText}>Sign Out</Text>
+        <TouchableOpacity onPress={logout} style={DS.signOut}>
+          <Text style={DS.signOutTxt}>Sign Out</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Student ID bar */}
-      <View style={[styles.idBar, { backgroundColor: T.primary }]}>
-        <Text style={styles.idBarText}>Student ID: {user?.studentCode}</Text>
+      <View style={[DS.idStrip, { backgroundColor: userAccent + '18', borderBottomColor: userAccent + '33' }]}>
+        <Text style={[DS.idTxt, { color: userAccent }]}>ID: {user?.studentCode}</Text>
       </View>
 
-      {/* Tabs */}
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tabScroll}>
-        {[
-          { id: 'home',      icon: '🏠', label: 'Home' },
-          { id: 'attendance',icon: '📅', label: 'Attendance' },
-          { id: 'academic',  icon: '📚', label: 'Grades' },
-          { id: 'homework',  icon: '📝', label: 'Homework' },
-          { id: 'sports',    icon: '🏃', label: 'Sports' },
-          { id: 'announce',  icon: '📢', label: 'News' },
-          { id: 'alerts',    icon: '🚨', label: 'Alerts' },
-        ].map(t => (
-          <TouchableOpacity
-            key={t.id}
-            style={[styles.tabBtn, tab === t.id && { borderBottomColor: T.primary, borderBottomWidth: 2 }]}
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} style={DS.tabBar}>
+        {TABS.map(t => (
+          <TouchableOpacity key={t.id}
+            style={[DS.tabItem, tab === t.id && { borderBottomColor: userAccent, borderBottomWidth: 2 }]}
             onPress={() => setTab(t.id)}>
-            <Text style={{ fontSize: 16 }}>{t.icon}</Text>
-            <Text style={[styles.tabText, tab === t.id && { color: T.primary }]}>{t.label}</Text>
+            <Text style={{ fontSize: 15 }}>{t.icon}</Text>
+            <Text style={[DS.tabLabel, tab === t.id && { color: userAccent }]}>{t.label}</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
 
-      {dataLoading ? (
-        <ActivityIndicator color={T.primary} size="large" style={{ marginTop: 40 }} />
-      ) : (
-        <ScrollView style={styles.content}>
+      {dataLoading
+        ? <ActivityIndicator color={userAccent} size="large" style={{ marginTop: 48 }} />
+        : (
+          <ScrollView style={DS.body}>
+            {tab === 'home' && (
+              <>
+                <Text style={DS.sectionHead}>OVERVIEW</Text>
+                <View style={DS.statsGrid}>
+                  {[
+                    { label: 'Attendance', count: attendance.length,    color: C.primary, tab: 'attendance' },
+                    { label: 'Grades',     count: academic.length,      color: C.blue,    tab: 'academic' },
+                    { label: 'Homework',   count: homework.length,      color: C.purple,  tab: 'homework' },
+                    { label: 'Sports',     count: sports.length,        color: C.amber,   tab: 'sports' },
+                    { label: 'News',       count: announcements.length, color: '#06B6D4', tab: 'announce' },
+                    { label: 'Alerts',     count: alerts.length,        color: C.red,     tab: 'alerts' },
+                  ].map((s, i) => (
+                    <TouchableOpacity key={i}
+                      style={[DS.statCard, { borderTopColor: s.color }]}
+                      onPress={() => setTab(s.tab)}>
+                      <Text style={[DS.statCount, { color: s.color }]}>{s.count}</Text>
+                      <Text style={DS.statLabel}>{s.label}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </>
+            )}
 
-          {/* Home Tab */}
-          {tab === 'home' && (
-            <>
-              <Text style={styles.sectionTitle}>QUICK SUMMARY</Text>
-              {[
-                { icon: '📅', title: 'Attendance', count: attendance.length, color: T.primary, tab: 'attendance' },
-                { icon: '📚', title: 'Academic Reports', count: academic.length, color: '#2a6fa8', tab: 'academic' },
-                { icon: '📝', title: 'Homework', count: homework.length, color: '#a855f7', tab: 'homework' },
-                { icon: '🏃', title: 'Sports Assessments', count: sports.length, color: '#e8692a', tab: 'sports' },
-                { icon: '📢', title: 'Announcements', count: announcements.length, color: '#f59e0b', tab: 'announce' },
-                { icon: '🚨', title: 'Alerts', count: alerts.length, color: '#ef4444', tab: 'alerts' },
-              ].map((item, i) => (
-                <TouchableOpacity key={i} style={styles.summaryCard} onPress={() => setTab(item.tab)}>
-                  <View style={[styles.summaryIcon, { backgroundColor: item.color + '22' }]}>
-                    <Text style={{ fontSize: 22 }}>{item.icon}</Text>
-                  </View>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.summaryTitle}>{item.title}</Text>
-                    <Text style={styles.summarySub}>{item.count} record{item.count !== 1 ? 's' : ''}</Text>
-                  </View>
-                  <Text style={styles.arrow}>›</Text>
-                </TouchableOpacity>
-              ))}
-            </>
-          )}
+            {tab === 'attendance' && (
+              <>
+                <Text style={DS.sectionHead}>ATTENDANCE HISTORY</Text>
+                {attendance.length === 0 ? <Empty icon="📅" msg="No attendance records yet." /> :
+                  attendance.map((r: any) => {
+                    const sc = r.status === 'present' ? C.primary : r.status === 'absent' ? C.red : r.status === 'late' ? C.amber : C.blue;
+                    return (
+                      <View key={r.id} style={DS.row}>
+                        <View style={[DS.rowAccent, { backgroundColor: sc }]} />
+                        <View style={{ flex: 1 }}>
+                          <Text style={DS.rowTitle}>{r.date}</Text>
+                          <Text style={DS.rowSub}>{r.class_name}</Text>
+                        </View>
+                        <Tag label={r.status?.toUpperCase()} color={sc} />
+                      </View>
+                    );
+                  })}
+              </>
+            )}
 
-          {/* Attendance Tab */}
-          {tab === 'attendance' && (
-            <>
-              <Text style={styles.sectionTitle}>ATTENDANCE HISTORY</Text>
-              {attendance.length === 0 ? (
-                <EmptyCard icon="📅" message="No attendance records yet." />
-              ) : (
-                attendance.map(r => (
-                  <View key={r.id} style={styles.recordCard}>
-                    <View style={[styles.statusDot, {
-                      backgroundColor: r.status === 'present' ? '#22c55e' :
-                                       r.status === 'absent' ? '#ef4444' :
-                                       r.status === 'late' ? '#eab308' : '#3b82f6'
-                    }]} />
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.recordTitle}>{r.date}</Text>
-                      <Text style={styles.recordSub}>{r.class_name}</Text>
+            {tab === 'academic' && (
+              <>
+                <Text style={DS.sectionHead}>ACADEMIC REPORTS</Text>
+                {academic.length === 0 ? <Empty icon="📚" msg="No academic reports yet." /> :
+                  academic.map((r: any) => (
+                    <View key={r.id} style={DS.row}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={DS.rowTitle}>{r.subject}</Text>
+                        <Text style={DS.rowSub}>{r.term}</Text>
+                        {r.remarks && <Text style={DS.rowNote}>{r.remarks}</Text>}
+                      </View>
+                      <View style={DS.gradeBox}>
+                        <Text style={DS.gradeNum}>{r.score}</Text>
+                        <Text style={DS.gradeLetter}>{r.grade}</Text>
+                      </View>
                     </View>
-                    <View style={[styles.statusBadge, {
-                      backgroundColor: r.status === 'present' ? '#dcfce7' :
-                                       r.status === 'absent' ? '#fee2e2' :
-                                       r.status === 'late' ? '#fef9c3' : '#dbeafe'
-                    }]}>
-                      <Text style={[styles.statusText, {
-                        color: r.status === 'present' ? '#166534' :
-                               r.status === 'absent' ? '#991b1b' :
-                               r.status === 'late' ? '#854d0e' : '#1e40af'
-                      }]}>{r.status?.toUpperCase()}</Text>
-                    </View>
-                  </View>
-                ))
-              )}
-            </>
-          )}
+                  ))}
+              </>
+            )}
 
-          {/* Academic Tab */}
-          {tab === 'academic' && (
-            <>
-              <Text style={styles.sectionTitle}>ACADEMIC REPORTS</Text>
-              {academic.length === 0 ? (
-                <EmptyCard icon="📚" message="No academic reports yet." />
-              ) : (
-                academic.map(r => (
-                  <View key={r.id} style={styles.recordCard}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.recordTitle}>{r.subject}</Text>
-                      <Text style={styles.recordSub}>{r.term}</Text>
-                      {r.remarks && <Text style={styles.recordNote}>{r.remarks}</Text>}
+            {tab === 'homework' && (
+              <>
+                <Text style={DS.sectionHead}>HOMEWORK</Text>
+                {homework.length === 0 ? <Empty icon="📝" msg="No homework posted yet." /> :
+                  homework.map((r: any) => (
+                    <View key={r.id} style={DS.row}>
+                      <View style={[DS.rowAccent, { backgroundColor: C.purple }]} />
+                      <View style={{ flex: 1 }}>
+                        <Text style={DS.rowTitle}>{r.subject}</Text>
+                        <Text style={DS.rowSub}>Due: {r.due_date || 'No date'}</Text>
+                        {r.description && <Text style={DS.rowNote}>{r.description}</Text>}
+                      </View>
                     </View>
-                    <View style={styles.gradeBox}>
-                      <Text style={styles.gradeScore}>{r.score}</Text>
-                      <Text style={styles.gradeLabel}>{r.grade}</Text>
+                  ))}
+              </>
+            )}
+
+            {tab === 'sports' && (
+              <>
+                <Text style={DS.sectionHead}>SPORTS & PHYSICAL</Text>
+                {sports.length === 0 ? <Empty icon="🏃" msg="No sports assessments yet." /> :
+                  sports.map((r: any) => {
+                    const rc = r.rating === 'excellent' ? C.primary : r.rating === 'good' ? C.blue : r.rating === 'average' ? C.amber : C.red;
+                    return (
+                      <View key={r.id} style={DS.row}>
+                        <View style={{ flex: 1 }}>
+                          <Text style={DS.rowTitle}>{r.sport_label || r.sport}</Text>
+                          <Text style={DS.rowSub}>{r.term} · {r.assessment_date}</Text>
+                          {r.notes && <Text style={DS.rowNote}>{r.notes}</Text>}
+                        </View>
+                        <Tag label={r.rating?.toUpperCase()} color={rc} />
+                      </View>
+                    );
+                  })}
+              </>
+            )}
+
+            {tab === 'announce' && (
+              <>
+                <Text style={DS.sectionHead}>ANNOUNCEMENTS</Text>
+                {announcements.length === 0 ? <Empty icon="📢" msg="No announcements yet." /> :
+                  announcements.map((r: any) => (
+                    <View key={r.id} style={DS.announceCard}>
+                      <Text style={DS.announceTxt}>{r.text}</Text>
+                      <Text style={DS.announceDate}>{r.created_at?.slice(0, 10)}</Text>
                     </View>
-                  </View>
-                ))
-              )}
-            </>
-          )}
+                  ))}
+              </>
+            )}
 
-          {/* Homework Tab */}
-          {tab === 'homework' && (
-            <>
-              <Text style={styles.sectionTitle}>HOMEWORK</Text>
-              {homework.length === 0 ? (
-                <EmptyCard icon="📝" message="No homework posted yet." />
-              ) : (
-                homework.map(r => (
-                  <View key={r.id} style={styles.recordCard}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.recordTitle}>{r.subject}</Text>
-                      <Text style={styles.recordSub}>{r.hw_type} · Due: {r.due_date || 'No date'}</Text>
-                      {r.description && <Text style={styles.recordNote}>{r.description}</Text>}
+            {tab === 'alerts' && (
+              <>
+                <Text style={DS.sectionHead}>ALERTS FROM SCHOOL</Text>
+                {alerts.length === 0 ? <Empty icon="🚨" msg="No alerts from school." /> :
+                  alerts.map((r: any) => (
+                    <View key={r.id} style={[DS.row, { borderLeftWidth: 3, borderLeftColor: C.red }]}>
+                      <View style={{ flex: 1 }}>
+                        <Text style={DS.rowTitle}>{r.title}</Text>
+                        {r.description && <Text style={DS.rowNote}>{r.description}</Text>}
+                        <Text style={DS.rowSub}>{r.created_at?.slice(0, 10)}</Text>
+                      </View>
                     </View>
-                  </View>
-                ))
-              )}
-            </>
-          )}
+                  ))}
+              </>
+            )}
 
-          {/* Sports Tab */}
-          {tab === 'sports' && (
-            <>
-              <Text style={styles.sectionTitle}>SPORTS & PHYSICAL</Text>
-              {sports.length === 0 ? (
-                <EmptyCard icon="🏃" message="No sports assessments yet." />
-              ) : (
-                sports.map(r => (
-                  <View key={r.id} style={styles.recordCard}>
-                    <View style={{ flex: 1 }}>
-                      <Text style={styles.recordTitle}>{r.sport_label || r.sport}</Text>
-                      <Text style={styles.recordSub}>{r.term} · {r.assessment_date}</Text>
-                      {r.notes && <Text style={styles.recordNote}>{r.notes}</Text>}
-                    </View>
-                    <View style={[styles.ratingBadge, {
-                      backgroundColor: r.rating === 'excellent' ? '#dcfce7' :
-                                       r.rating === 'good' ? '#dbeafe' :
-                                       r.rating === 'average' ? '#fef9c3' : '#fee2e2'
-                    }]}>
-                      <Text style={styles.ratingText}>{r.rating?.toUpperCase()}</Text>
-                    </View>
-                  </View>
-                ))
-              )}
-            </>
-          )}
-
-          {/* Announcements Tab */}
-          {tab === 'announce' && (
-            <>
-              <Text style={styles.sectionTitle}>ANNOUNCEMENTS</Text>
-              {announcements.length === 0 ? (
-                <EmptyCard icon="📢" message="No announcements yet." />
-              ) : (
-                announcements.map(r => (
-                  <View key={r.id} style={styles.announceCard}>
-                    <Text style={styles.announceText}>{r.text}</Text>
-                    <Text style={styles.announceDate}>{r.created_at?.slice(0, 10)}</Text>
-                  </View>
-                ))
-              )}
-            </>
-          )}
-
-          {/* Alerts Tab */}
-          {tab === 'alerts' && (
-            <>
-              <Text style={styles.sectionTitle}>ALERTS FROM SCHOOL</Text>
-              {alerts.length === 0 ? (
-                <EmptyCard icon="🚨" message="No alerts from school." />
-              ) : (
-                alerts.map(r => (
-                  <View key={r.id} style={[styles.alertCard, { borderLeftColor: '#ef4444' }]}>
-                    <Text style={styles.alertTitle}>{r.title}</Text>
-                    {r.description && <Text style={styles.alertDesc}>{r.description}</Text>}
-                    <Text style={styles.announceDate}>{r.created_at?.slice(0, 10)}</Text>
-                  </View>
-                ))
-              )}
-            </>
-          )}
-
-        </ScrollView>
-      )}
+            <View style={{ height: 40 }} />
+          </ScrollView>
+        )}
     </View>
   );
 }
 
-function EmptyCard({ icon, message }) {
-  return (
-    <View style={styles.emptyCard}>
-      <Text style={{ fontSize: 40, marginBottom: 12 }}>{icon}</Text>
-      <Text style={styles.emptyText}>{message}</Text>
-    </View>
-  );
-}
-
-const styles = StyleSheet.create({
-  container:       { flex: 1 },
-  scroll:          { padding: 24, paddingTop: 60 },
-  appTitle:        { fontSize: 40, fontWeight: '800', color: '#fff', marginBottom: 6 },
-  appSub:          { fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 32 },
-  schoolBadge:     { borderRadius: 12, padding: 14, marginBottom: 24, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  schoolBadgeName: { fontSize: 15, fontWeight: '700', color: '#fff' },
-  schoolBadgeChange:{ fontSize: 12, color: 'rgba(255,255,255,0.7)' },
-  selectSchoolBtn: { backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 12, padding: 16, marginBottom: 24, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)' },
-  selectSchoolText:{ fontSize: 15, color: 'rgba(255,255,255,0.7)', fontWeight: '600' },
-  label:           { fontSize: 11, fontWeight: '700', color: '#7a8fa8', textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 6 },
-  inputWrap:       { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: 10, borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)', marginBottom: 16, paddingHorizontal: 12 },
-  inputIcon:       { fontSize: 18, marginRight: 10 },
-  inputInner:      { flex: 1, padding: 14, color: '#fff', fontSize: 15 },
-  loginBtn:        { borderRadius: 12, padding: 16, alignItems: 'center', marginTop: 8 },
-  loginBtnText:    { color: '#fff', fontSize: 16, fontWeight: '700' },
-  hint:            { textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 12, marginTop: 12 },
-  schoolCard:      { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: 14, padding: 16, marginBottom: 10 },
-  dot:             { width: 14, height: 14, borderRadius: 7, marginRight: 14 },
-  schoolName:      { fontSize: 15, fontWeight: '700', color: '#fff' },
-  schoolCat:       { fontSize: 12, color: 'rgba(255,255,255,0.45)', marginTop: 2 },
-  arrow:           { fontSize: 22, color: '#ddd8cc' },
-  pageTitle:       { fontSize: 24, fontWeight: '800', color: '#fff', marginBottom: 24 },
-  backBtn:         { marginBottom: 20 },
-  backText:        { color: 'rgba(255,255,255,0.5)', fontSize: 14 },
-  header:          { flexDirection: 'row', alignItems: 'center', padding: 16, paddingTop: 56, gap: 12 },
-  avatar:          { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
-  avatarText:      { color: '#fff', fontWeight: '800', fontSize: 16 },
-  headerName:      { fontSize: 16, fontWeight: '700', color: '#fff' },
-  headerSub:       { fontSize: 11, color: 'rgba(255,255,255,0.5)', marginTop: 2 },
-  signOutBtn:      { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 8, padding: 8, paddingHorizontal: 10 },
-  signOutText:     { color: 'rgba(255,255,255,0.6)', fontSize: 12 },
-  idBar:           { paddingHorizontal: 16, paddingVertical: 8 },
-  idBarText:       { color: 'rgba(255,255,255,0.8)', fontSize: 12, fontWeight: '600' },
-  tabScroll:       { backgroundColor: '#fff', borderBottomWidth: 1, borderBottomColor: '#ddd8cc', maxHeight: 64 },
-  tabBtn:          { paddingHorizontal: 16, paddingVertical: 12, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  tabText:         { fontSize: 11, color: '#7a7066', fontWeight: '600', marginTop: 2 },
-  content:         { flex: 1, padding: 16 },
-  sectionTitle:    { fontSize: 10, fontWeight: '700', color: '#7a7066', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 12, marginTop: 4 },
-  summaryCard:     { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1.5, borderColor: '#ddd8cc' },
-  summaryIcon:     { width: 46, height: 46, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
-  summaryTitle:    { fontSize: 15, fontWeight: '700', color: '#0f1923', marginBottom: 2 },
-  summarySub:      { fontSize: 12, color: '#7a7066' },
-  recordCard:      { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: '#ddd8cc' },
-  recordTitle:     { fontSize: 14, fontWeight: '700', color: '#0f1923', marginBottom: 2 },
-  recordSub:       { fontSize: 12, color: '#7a7066' },
-  recordNote:      { fontSize: 12, color: '#3a3530', marginTop: 4, lineHeight: 18 },
-  statusDot:       { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
-  statusBadge:     { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  statusText:      { fontSize: 11, fontWeight: '700' },
-  gradeBox:        { alignItems: 'center', backgroundColor: '#f0ebe0', borderRadius: 10, padding: 10, minWidth: 50 },
-  gradeScore:      { fontSize: 18, fontWeight: '800', color: '#0f1923' },
-  gradeLabel:      { fontSize: 11, color: '#7a7066', marginTop: 2 },
-  ratingBadge:     { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20 },
-  ratingText:      { fontSize: 11, fontWeight: '700', color: '#0f1923' },
-  announceCard:    { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: '#ddd8cc' },
-  announceText:    { fontSize: 14, color: '#0f1923', lineHeight: 20, marginBottom: 6 },
-  announceDate:    { fontSize: 11, color: '#7a7066' },
-  alertCard:       { backgroundColor: '#fff', borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: '#ddd8cc', borderLeftWidth: 4 },
-  alertTitle:      { fontSize: 14, fontWeight: '700', color: '#0f1923', marginBottom: 4 },
-  alertDesc:       { fontSize: 13, color: '#3a3530', lineHeight: 18, marginBottom: 6 },
-  emptyCard:       { alignItems: 'center', padding: 40, backgroundColor: '#fff', borderRadius: 16, borderWidth: 1.5, borderColor: '#ddd8cc' },
-  emptyText:       { fontSize: 14, color: '#7a7066', textAlign: 'center' },
+const DS = StyleSheet.create({
+  fill:         { flex: 1 },
+  scroll:       { padding: 24, paddingTop: 60 },
+  back:         { marginBottom: 20 },
+  backTxt:      { color: C.muted, fontSize: 14 },
+  h1:           { fontSize: 26, fontWeight: '800', color: C.text, marginBottom: 20 },
+  schoolRow:    { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border },
+  dot:          { width: 12, height: 12, borderRadius: 6, marginRight: 12 },
+  schoolName:   { fontSize: 15, fontWeight: '700', color: C.text, marginBottom: 2 },
+  schoolSub:    { fontSize: 12, color: C.muted },
+  loginHeader:  { alignItems: 'center', marginBottom: 32, paddingTop: 20 },
+  loginBadge:   { width: 56, height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, marginBottom: 14 },
+  loginBadgeE:  { fontSize: 26, fontWeight: '900' },
+  loginTitle:   { fontSize: 26, fontWeight: '800', color: C.text, marginBottom: 4 },
+  loginSub:     { fontSize: 13, color: C.muted },
+  schoolPill:   { flexDirection: 'row', alignItems: 'center', borderRadius: 12, padding: 14, marginBottom: 24, borderWidth: 1 },
+  schoolPillName: { flex: 1, fontSize: 14, fontWeight: '700', marginLeft: 4 },
+  schoolPillChange: { color: C.muted, fontSize: 12 },
+  selectBtn:    { backgroundColor: C.card, borderRadius: 12, padding: 16, marginBottom: 24, alignItems: 'center', borderWidth: 1, borderColor: C.border },
+  selectBtnTxt: { color: C.muted, fontSize: 14, fontWeight: '600' },
+  label:        { fontSize: 10, fontWeight: '700', color: C.muted, letterSpacing: 1.2, marginBottom: 8 },
+  inputBox:     { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 20 },
+  inputTxt:     { color: C.text, fontSize: 15 },
+  btn:          { borderRadius: 14, padding: 17, alignItems: 'center', marginTop: 4 },
+  btnTxt:       { color: '#fff', fontSize: 16, fontWeight: '700' },
+  hint:         { textAlign: 'center', color: C.muted, fontSize: 12, marginTop: 12 },
+  header:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, padding: 16, paddingTop: 52, gap: 12, borderBottomWidth: 1, borderBottomColor: C.border },
+  avatar:       { width: 42, height: 42, borderRadius: 13, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5 },
+  avatarTxt:    { fontWeight: '800', fontSize: 15 },
+  headerName:   { fontSize: 15, fontWeight: '700', color: C.text },
+  headerSub:    { fontSize: 11, color: C.muted, marginTop: 2 },
+  signOut:      { backgroundColor: C.card, borderRadius: 8, padding: 8, paddingHorizontal: 10, borderWidth: 1, borderColor: C.border },
+  signOutTxt:   { color: C.muted, fontSize: 12, fontWeight: '600' },
+  idStrip:      { paddingHorizontal: 16, paddingVertical: 7, borderBottomWidth: 1 },
+  idTxt:        { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  tabBar:       { backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border, maxHeight: 60 },
+  tabItem:      { paddingHorizontal: 14, paddingVertical: 10, alignItems: 'center', borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  tabLabel:     { fontSize: 10, color: C.muted, fontWeight: '600', marginTop: 2 },
+  body:         { flex: 1, padding: 16 },
+  sectionHead:  { fontSize: 10, fontWeight: '700', color: C.muted, letterSpacing: 1.2, marginBottom: 14, marginTop: 4 },
+  statsGrid:    { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  statCard:     { width: '30%', backgroundColor: C.card, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.border, borderTopWidth: 2, alignItems: 'center' },
+  statCount:    { fontSize: 26, fontWeight: '900', marginBottom: 4 },
+  statLabel:    { fontSize: 10, color: C.muted, fontWeight: '600' },
+  row:          { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: C.border },
+  rowAccent:    { width: 4, borderRadius: 4, marginRight: 12, alignSelf: 'stretch' },
+  rowTitle:     { fontSize: 14, fontWeight: '700', color: C.text, marginBottom: 2 },
+  rowSub:       { fontSize: 11, color: C.muted },
+  rowNote:      { fontSize: 12, color: '#94A3B8', marginTop: 4, lineHeight: 18 },
+  gradeBox:     { alignItems: 'center', backgroundColor: C.surface, borderRadius: 10, padding: 10, minWidth: 50, borderWidth: 1, borderColor: C.border },
+  gradeNum:     { fontSize: 18, fontWeight: '900', color: C.text },
+  gradeLetter:  { fontSize: 11, color: C.muted, marginTop: 2 },
+  announceCard: { backgroundColor: C.card, borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: C.border, borderLeftWidth: 3, borderLeftColor: '#06B6D4' },
+  announceTxt:  { fontSize: 14, color: C.text, lineHeight: 20, marginBottom: 6 },
+  announceDate: { fontSize: 11, color: C.muted },
+  empty:        { alignItems: 'center', padding: 48, backgroundColor: C.card, borderRadius: 16, borderWidth: 1, borderColor: C.border },
+  emptyTxt:     { fontSize: 13, color: C.muted, textAlign: 'center' },
 });
