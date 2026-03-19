@@ -186,7 +186,7 @@ export default function StudentDashboardScreen() {
   }
 
   // Login
-  if (step === 'login') {
+  if (step === 'login' && !session) {
     return (
       <View style={[SD.fill, { backgroundColor: C.canvas }]}>
         <AfricanBg />
