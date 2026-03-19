@@ -8,29 +8,79 @@ import {
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
 const { width } = Dimensions.get('window');
 
-// ─── Colour tokens ────────────────────────────────────────────────────────────
+// ── Design Tokens ─────────────────────────────────────────────────────────────
 const C = {
-  bg:       '#0A0F1E',
-  surface:  '#111827',
-  card:     '#1A2235',
-  border:   '#1F2D45',
-  primary:  '#00C896',
-  blue:     '#3B82F6',
-  purple:   '#8B5CF6',
-  red:      '#EF4444',
-  amber:    '#F59E0B',
-  text:     '#F1F5F9',
-  muted:    '#64748B',
-  subtle:   '#334155',
+  white:    '#FFFFFF',
+  offWhite: '#F8F9FA',
+  canvas:   '#F4F6F4',
+  green:    '#1A5C38',
+  greenMid: '#2E7D52',
+  greenLight:'#E8F2EC',
+  navy:     '#0D2145',
+  navyMid:  '#1A3566',
+  navyLight:'#E8EDF5',
+  grey:     '#6B7280',
+  greyLight:'#E5E7EB',
+  greyDark: '#374151',
+  black:    '#0A0E14',
+  border:   '#D1D5DB',
+  shadow:   'rgba(13,33,69,0.08)',
 };
+
+// ── African-inspired SVG background pattern (as a View overlay) ───────────────
+function AfricanPattern() {
+  const patterns = [
+    // Adinkra-inspired geometric symbols as simple views
+    { top: 40,  left: 20,  size: 48, opacity: 0.04, type: 'diamond' },
+    { top: 140, left: width - 60, size: 36, opacity: 0.035, type: 'cross' },
+    { top: 280, left: 40,  size: 44, opacity: 0.04, type: 'circle' },
+    { top: 400, left: width - 80, size: 52, opacity: 0.03, type: 'diamond' },
+    { top: 520, left: 60,  size: 40, opacity: 0.04, type: 'cross' },
+    { top: 650, left: width - 50, size: 38, opacity: 0.035, type: 'circle' },
+    { top: 780, left: 30,  size: 46, opacity: 0.03, type: 'diamond' },
+    { top: 900, left: width - 70, size: 42, opacity: 0.04, type: 'cross' },
+  ];
+  return (
+    <View style={StyleSheet.absoluteFill} pointerEvents="none">
+      {patterns.map((p, i) => (
+        <View key={i} style={{
+          position: 'absolute', top: p.top, left: p.left,
+          width: p.size, height: p.size, opacity: p.opacity,
+        }}>
+          {p.type === 'diamond' && (
+            <View style={{
+              width: p.size, height: p.size,
+              borderWidth: 2, borderColor: C.navy,
+              transform: [{ rotate: '45deg' }],
+            }} />
+          )}
+          {p.type === 'cross' && (
+            <>
+              <View style={{ position: 'absolute', top: p.size/2 - 1, left: 0, width: p.size, height: 2, backgroundColor: C.navy }} />
+              <View style={{ position: 'absolute', left: p.size/2 - 1, top: 0, width: 2, height: p.size, backgroundColor: C.navy }} />
+              <View style={{ position: 'absolute', top: p.size/2 - 1, left: 0, width: p.size, height: 2, backgroundColor: C.navy, transform: [{ rotate: '45deg' }] }} />
+              <View style={{ position: 'absolute', left: p.size/2 - 1, top: 0, width: 2, height: p.size, backgroundColor: C.navy, transform: [{ rotate: '45deg' }] }} />
+            </>
+          )}
+          {p.type === 'circle' && (
+            <>
+              <View style={{ width: p.size, height: p.size, borderRadius: p.size/2, borderWidth: 2, borderColor: C.navy }} />
+              <View style={{ position: 'absolute', top: p.size/4, left: p.size/4, width: p.size/2, height: p.size/2, borderRadius: p.size/4, borderWidth: 1.5, borderColor: C.navy }} />
+            </>
+          )}
+        </View>
+      ))}
+    </View>
+  );
+}
 
 function FadeIn({ children, delay = 0 }: any) {
   const opacity = useState(new Animated.Value(0))[0];
-  const translateY = useState(new Animated.Value(18))[0];
+  const translateY = useState(new Animated.Value(16))[0];
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(opacity, { toValue: 1, duration: 500, delay, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 500, delay, useNativeDriver: true }),
+      Animated.timing(opacity, { toValue: 1, duration: 600, delay, useNativeDriver: true }),
+      Animated.timing(translateY, { toValue: 0, duration: 600, delay, useNativeDriver: true }),
     ]).start();
   }, []);
   return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
@@ -39,7 +89,7 @@ function FadeIn({ children, delay = 0 }: any) {
 export default function HomeScreen() {
   const router = useRouter();
   const [step, setStep] = useState('home');
-  const [schools, setSchools] = useState([]);
+  const [schools, setSchools] = useState<any[]>([]);
   const [loadingSchools, setLoadingSchools] = useState(false);
   const [selectedSchool, setSelectedSchool] = useState<any>(null);
   const [loginType, setLoginType] = useState('student');
@@ -94,37 +144,37 @@ export default function HomeScreen() {
   // ── Logged in ────────────────────────────────────────────────────────────────
   if (session) {
     const u = session.user;
-    const accent = u.school?.theme?.primary || C.primary;
     return (
-      <View style={[S.fill, { backgroundColor: C.bg }]}>
-        <View style={[S.successHeader, { borderBottomColor: accent + '33' }]}>
-          <View style={[S.bigAvatar, { backgroundColor: accent + '22', borderColor: accent + '55' }]}>
-            <Text style={[S.bigAvatarTxt, { color: accent }]}>
+      <View style={[H.fill, { backgroundColor: C.canvas }]}>
+        <AfricanPattern />
+        <View style={H.successCard}>
+          <View style={H.successAvatar}>
+            <Text style={H.successAvatarTxt}>
               {u.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}
             </Text>
           </View>
-          <Text style={S.successName}>{u.name}</Text>
-          <Text style={S.successSchool}>{u.school?.name}</Text>
-          <View style={[S.chip, { backgroundColor: accent + '22', borderColor: accent + '44' }]}>
-            <Text style={[S.chipTxt, { color: accent }]}>
+          <Text style={H.successName}>{u.name}</Text>
+          <Text style={H.successSchool}>{u.school?.name}</Text>
+          <View style={H.successChip}>
+            <Text style={H.successChipTxt}>
               {u.role === 'student' ? '🎓 Student' : u.role === 'head_admin' ? '🏫 School Admin' : '👑 Super Admin'}
             </Text>
           </View>
           {u.role === 'student' && (
-            <View style={S.infoRow}>
-              <View style={S.infoItem}>
-                <Text style={S.infoLabel}>CLASS</Text>
-                <Text style={S.infoVal}>{u.class?.name || '—'}</Text>
+            <View style={H.infoRow}>
+              <View style={H.infoCell}>
+                <Text style={H.infoCellLabel}>CLASS</Text>
+                <Text style={H.infoCellVal}>{u.class?.name || '—'}</Text>
               </View>
-              <View style={[S.infoItem, { borderLeftWidth: 1, borderLeftColor: C.border }]}>
-                <Text style={S.infoLabel}>STUDENT ID</Text>
-                <Text style={S.infoVal}>{u.studentCode}</Text>
+              <View style={[H.infoCell, { borderLeftWidth: 1, borderLeftColor: C.border }]}>
+                <Text style={H.infoCellLabel}>STUDENT ID</Text>
+                <Text style={H.infoCellVal}>{u.studentCode}</Text>
               </View>
             </View>
           )}
         </View>
-        <TouchableOpacity style={S.signOutBtn} onPress={logout}>
-          <Text style={S.signOutTxt}>Sign Out</Text>
+        <TouchableOpacity style={H.signOutBtn} onPress={logout}>
+          <Text style={H.signOutTxt}>Sign Out</Text>
         </TouchableOpacity>
       </View>
     );
@@ -132,79 +182,64 @@ export default function HomeScreen() {
 
   // ── Login ────────────────────────────────────────────────────────────────────
   if (step === 'login' && selectedSchool) {
-    const accent = selectedSchool.theme_primary || C.primary;
     return (
-      <View style={[S.fill, { backgroundColor: C.bg }]}>
-        <ScrollView contentContainerStyle={S.loginScroll} keyboardShouldPersistTaps="handled">
-          <TouchableOpacity onPress={() => setStep('schools')} style={S.back}>
-            <Text style={S.backTxt}>← Back</Text>
+      <View style={[H.fill, { backgroundColor: C.canvas }]}>
+        <AfricanPattern />
+        <ScrollView contentContainerStyle={H.loginScroll} keyboardShouldPersistTaps="handled">
+          <TouchableOpacity onPress={() => setStep('schools')} style={H.back}>
+            <Text style={H.backTxt}>← Back</Text>
           </TouchableOpacity>
 
           <FadeIn>
-            <View style={[S.schoolPill, { backgroundColor: accent + '18', borderColor: accent + '44' }]}>
-              <View style={[S.schoolPillDot, { backgroundColor: accent }]} />
-              <View style={{ flex: 1 }}>
-                <Text style={[S.schoolPillName, { color: accent }]}>{selectedSchool.name}</Text>
-                <Text style={S.schoolPillCat}>{selectedSchool.category}</Text>
-              </View>
+            <View style={[H.schoolBadge, { borderLeftColor: selectedSchool.theme_primary || C.green }]}>
+              <Text style={H.schoolBadgeName}>{selectedSchool.name}</Text>
+              <Text style={H.schoolBadgeCat}>{selectedSchool.category} · {selectedSchool.subsystem?.toUpperCase()}</Text>
             </View>
           </FadeIn>
 
           <FadeIn delay={80}>
-            <View style={S.toggleRow}>
+            <View style={H.toggleRow}>
               {[
-                { id: 'student', label: '🎓 Student' },
+                { id: 'student', label: '🎓 Student / Parent' },
                 { id: 'staff',   label: '🏫 Staff' },
               ].map(t => (
-                <TouchableOpacity
-                  key={t.id}
-                  style={[S.toggleBtn, loginType === t.id && { backgroundColor: accent, borderColor: accent }]}
+                <TouchableOpacity key={t.id}
+                  style={[H.toggleBtn, loginType === t.id && H.toggleBtnActive]}
                   onPress={() => setLoginType(t.id)}>
-                  <Text style={[S.toggleTxt, loginType === t.id && { color: '#fff' }]}>{t.label}</Text>
+                  <Text style={[H.toggleTxt, loginType === t.id && H.toggleTxtActive]}>{t.label}</Text>
                 </TouchableOpacity>
               ))}
             </View>
           </FadeIn>
 
           <FadeIn delay={140}>
-            <Text style={S.fieldLabel}>{loginType === 'student' ? 'STUDENT ID' : 'EMAIL'}</Text>
-            <View style={S.inputBox}>
-              <TextInput
-                style={S.inputTxt}
+            <Text style={H.label}>{loginType === 'student' ? 'STUDENT ID' : 'EMAIL ADDRESS'}</Text>
+            <View style={H.inputWrap}>
+              <TextInput style={H.input}
                 placeholder={loginType === 'student' ? 'e.g. LYC-0002' : 'admin@school.educaid.io'}
-                placeholderTextColor={C.muted}
-                value={username}
-                onChangeText={setUsername}
-                autoCapitalize="none"
-              />
+                placeholderTextColor={C.grey} value={username}
+                onChangeText={setUsername} autoCapitalize="none" />
             </View>
           </FadeIn>
 
           <FadeIn delay={200}>
-            <Text style={S.fieldLabel}>PASSWORD</Text>
-            <View style={S.inputBox}>
-              <TextInput
-                style={[S.inputTxt, { flex: 1 }]}
+            <Text style={H.label}>PASSWORD</Text>
+            <View style={H.inputWrap}>
+              <TextInput style={[H.input, { flex: 1 }]}
                 placeholder="Enter your password"
-                placeholderTextColor={C.muted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPw}
-              />
-              <TouchableOpacity onPress={() => setShowPw(!showPw)}>
-                <Text style={{ color: C.muted, fontSize: 13 }}>{showPw ? 'Hide' : 'Show'}</Text>
+                placeholderTextColor={C.grey} value={password}
+                onChangeText={setPassword} secureTextEntry={!showPw} />
+              <TouchableOpacity onPress={() => setShowPw(!showPw)} style={{ paddingHorizontal: 4 }}>
+                <Text style={{ color: C.grey, fontSize: 13 }}>{showPw ? 'Hide' : 'Show'}</Text>
               </TouchableOpacity>
             </View>
           </FadeIn>
 
           <FadeIn delay={260}>
-            <TouchableOpacity
-              style={[S.primaryBtn, { backgroundColor: accent }]}
-              onPress={doLogin}
-              disabled={loading}>
+            <TouchableOpacity style={H.primaryBtn} onPress={doLogin} disabled={loading}>
               {loading
-                ? <ActivityIndicator color="#fff" />
-                : <Text style={S.primaryBtnTxt}>Sign In →</Text>}
+                ? <ActivityIndicator color={C.white} />
+                : <Text style={H.primaryBtnTxt}>Sign In →</Text>}
             </TouchableOpacity>
           </FadeIn>
         </ScrollView>
@@ -215,28 +250,28 @@ export default function HomeScreen() {
   // ── School picker ────────────────────────────────────────────────────────────
   if (step === 'schools') {
     return (
-      <View style={[S.fill, { backgroundColor: C.bg }]}>
-        <ScrollView contentContainerStyle={S.listScroll}>
-          <TouchableOpacity onPress={() => setStep('home')} style={S.back}>
-            <Text style={S.backTxt}>← Back</Text>
+      <View style={[H.fill, { backgroundColor: C.canvas }]}>
+        <AfricanPattern />
+        <ScrollView contentContainerStyle={H.listScroll}>
+          <TouchableOpacity onPress={() => setStep('home')} style={H.back}>
+            <Text style={H.backTxt}>← Back</Text>
           </TouchableOpacity>
-          <Text style={S.pageH1}>Select School</Text>
-          <Text style={S.pageH2}>Choose your school to continue</Text>
+          <Text style={H.pageH1}>Select Your School</Text>
+          <Text style={H.pageH2}>Choose your institution to continue</Text>
           {loadingSchools
-            ? <ActivityIndicator color={C.primary} size="large" style={{ marginTop: 40 }} />
+            ? <ActivityIndicator color={C.green} size="large" style={{ marginTop: 40 }} />
             : schools.length === 0
-              ? <View style={S.emptyBox}><Text style={S.emptyTxt}>No schools registered yet.</Text></View>
+              ? <View style={H.emptyBox}><Text style={H.emptyTxt}>No schools registered yet.</Text></View>
               : schools.map((sc: any, i) => (
                   <FadeIn key={sc.id} delay={i * 60}>
-                    <TouchableOpacity
-                      style={S.schoolRow}
+                    <TouchableOpacity style={H.schoolRow}
                       onPress={() => { setSelectedSchool(sc); setStep('login'); }}>
-                      <View style={[S.schoolRowDot, { backgroundColor: sc.theme_primary || C.primary }]} />
+                      <View style={[H.schoolDot, { backgroundColor: sc.theme_primary || C.green }]} />
                       <View style={{ flex: 1 }}>
-                        <Text style={S.schoolRowName}>{sc.name}</Text>
-                        <Text style={S.schoolRowSub}>{sc.category} · {sc.subsystem?.toUpperCase()}</Text>
+                        <Text style={H.schoolName}>{sc.name}</Text>
+                        <Text style={H.schoolSub}>{sc.category} · {sc.subsystem?.toUpperCase()}</Text>
                       </View>
-                      <Text style={{ color: C.muted, fontSize: 20 }}>›</Text>
+                      <Text style={{ color: C.grey, fontSize: 22 }}>›</Text>
                     </TouchableOpacity>
                   </FadeIn>
                 ))
@@ -248,105 +283,122 @@ export default function HomeScreen() {
 
   // ── Home ─────────────────────────────────────────────────────────────────────
   const portals = [
-    { icon: '🎓', title: 'Student Portal',  sub: 'Grades, attendance & reports',  color: C.primary,  onPress: () => router.push('/studentdashboard') },
-    { icon: '🏫', title: 'School Login',    sub: 'Students & parents',             color: C.blue,     onPress: () => { setStep('schools'); loadSchools(); } },
-    { icon: '👨‍🏫', title: 'School Admin',   sub: 'Manage your school',             color: C.purple,   onPress: () => router.push('/schooladmin') },
-    { icon: '👑', title: 'Super Admin',     sub: 'Platform management',            color: C.red,      onPress: () => router.push('/superadmin') },
+    { icon: '🎓', title: 'Student Portal',  sub: 'Grades, attendance & reports',  accent: C.green,  onPress: () => router.push('/studentdashboard') },
+    { icon: '🏫', title: 'School Login',    sub: 'Students & parents',             accent: C.navy,   onPress: () => { setStep('schools'); loadSchools(); } },
+    { icon: '👨‍🏫', title: 'School Admin',  sub: 'Manage attendance & grades',     accent: C.green,  onPress: () => router.push('/schooladmin') },
+    { icon: '👑', title: 'Super Admin',     sub: 'Platform management',            accent: C.navy,   onPress: () => router.push('/superadmin') },
   ];
 
   return (
-    <View style={[S.fill, { backgroundColor: C.bg }]}>
-      <ScrollView contentContainerStyle={S.homeScroll}>
+    <View style={[H.fill, { backgroundColor: C.canvas }]}>
+      <AfricanPattern />
+      <ScrollView contentContainerStyle={H.homeScroll}>
+
         <FadeIn>
-          <View style={S.logoArea}>
-            <View style={S.logoBadge}>
-              <Text style={S.logoE}>E</Text>
+          <View style={H.heroArea}>
+            <View style={H.heroBadge}>
+              <Text style={H.heroBadgeTxt}>EA</Text>
             </View>
-            <Text style={S.logoText}>EducAid</Text>
-            <Text style={S.logoSub}>School Management Platform</Text>
+            <Text style={H.heroTitle}>EducAid</Text>
+            <Text style={H.heroSub}>Excellence in School Management</Text>
+            <View style={H.heroDivider} />
           </View>
         </FadeIn>
 
+        <FadeIn delay={100}>
+          <Text style={H.sectionLabel}>ACCESS PORTAL</Text>
+        </FadeIn>
+
         {portals.map((p, i) => (
-          <FadeIn key={p.title} delay={100 + i * 70}>
-            <TouchableOpacity style={[S.portalCard, { borderLeftColor: p.color }]} onPress={p.onPress} activeOpacity={0.8}>
-              <View style={[S.portalIcon, { backgroundColor: p.color + '18' }]}>
+          <FadeIn key={p.title} delay={160 + i * 80}>
+            <TouchableOpacity style={H.portalCard} onPress={p.onPress} activeOpacity={0.75}>
+              <View style={[H.portalIconBox, { backgroundColor: p.accent + '12' }]}>
                 <Text style={{ fontSize: 26 }}>{p.icon}</Text>
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={S.portalTitle}>{p.title}</Text>
-                <Text style={S.portalSub}>{p.sub}</Text>
+                <Text style={H.portalTitle}>{p.title}</Text>
+                <Text style={H.portalSub}>{p.sub}</Text>
               </View>
-              <View style={[S.portalArrow, { backgroundColor: p.color + '18' }]}>
-                <Text style={[S.portalArrowTxt, { color: p.color }]}>›</Text>
+              <View style={[H.portalChevron, { backgroundColor: p.accent + '12' }]}>
+                <Text style={[H.portalChevronTxt, { color: p.accent }]}>›</Text>
               </View>
             </TouchableOpacity>
           </FadeIn>
         ))}
 
-        <FadeIn delay={500}>
-          <Text style={S.footer}>EducAid v1.0 · Secure School Management</Text>
+        <FadeIn delay={600}>
+          <View style={H.footerArea}>
+            <View style={H.footerLine} />
+            <Text style={H.footerTxt}>EducAid · School Management Platform</Text>
+            <Text style={H.footerVersion}>Version 1.0</Text>
+          </View>
         </FadeIn>
+
       </ScrollView>
     </View>
   );
 }
 
-const S = StyleSheet.create({
-  fill:           { flex: 1 },
+const H = StyleSheet.create({
+  fill:            { flex: 1 },
   // Home
-  homeScroll:     { padding: 24, paddingTop: 72, paddingBottom: 40 },
-  logoArea:       { alignItems: 'center', marginBottom: 48 },
-  logoBadge:      { width: 64, height: 64, borderRadius: 20, backgroundColor: C.primary + '22', borderWidth: 1.5, borderColor: C.primary + '55', alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
-  logoE:          { fontSize: 32, fontWeight: '900', color: C.primary },
-  logoText:       { fontSize: 34, fontWeight: '900', color: C.text, letterSpacing: -0.5, marginBottom: 4 },
-  logoSub:        { fontSize: 13, color: C.muted, letterSpacing: 0.3 },
-  portalCard:     { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 16, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: C.border, borderLeftWidth: 3 },
-  portalIcon:     { width: 52, height: 52, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
-  portalTitle:    { fontSize: 16, fontWeight: '700', color: C.text, marginBottom: 3 },
-  portalSub:      { fontSize: 12, color: C.muted },
-  portalArrow:    { width: 32, height: 32, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
-  portalArrowTxt: { fontSize: 20, fontWeight: '700' },
-  footer:         { textAlign: 'center', color: C.subtle, fontSize: 11, marginTop: 24, letterSpacing: 0.3 },
-  // School list
-  listScroll:     { padding: 24, paddingTop: 60 },
-  pageH1:         { fontSize: 28, fontWeight: '800', color: C.text, marginBottom: 4 },
-  pageH2:         { fontSize: 13, color: C.muted, marginBottom: 28 },
-  schoolRow:      { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border },
-  schoolRowDot:   { width: 12, height: 12, borderRadius: 6, marginRight: 14 },
-  schoolRowName:  { fontSize: 15, fontWeight: '700', color: C.text, marginBottom: 2 },
-  schoolRowSub:   { fontSize: 12, color: C.muted },
-  emptyBox:       { alignItems: 'center', padding: 48 },
-  emptyTxt:       { color: C.muted, fontSize: 14 },
+  homeScroll:      { padding: 28, paddingTop: 80, paddingBottom: 48 },
+  heroArea:        { alignItems: 'center', marginBottom: 44 },
+  heroBadge:       { width: 72, height: 72, borderRadius: 22, backgroundColor: C.navy, alignItems: 'center', justifyContent: 'center', marginBottom: 18, shadowColor: C.navy, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 16, elevation: 8 },
+  heroBadgeTxt:    { fontSize: 26, fontWeight: '900', color: C.white, letterSpacing: 1 },
+  heroTitle:       { fontSize: 36, fontWeight: '900', color: C.navy, letterSpacing: -0.5, marginBottom: 6 },
+  heroSub:         { fontSize: 13, color: C.grey, letterSpacing: 0.4, marginBottom: 20 },
+  heroDivider:     { width: 40, height: 3, backgroundColor: C.green, borderRadius: 2 },
+  sectionLabel:    { fontSize: 10, fontWeight: '700', color: C.grey, letterSpacing: 1.5, marginBottom: 14 },
+  portalCard:      { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 18, padding: 18, marginBottom: 12, borderWidth: 1, borderColor: C.border, shadowColor: C.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 8, elevation: 2 },
+  portalIconBox:   { width: 54, height: 54, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: 16 },
+  portalTitle:     { fontSize: 16, fontWeight: '700', color: C.navy, marginBottom: 3 },
+  portalSub:       { fontSize: 12, color: C.grey },
+  portalChevron:   { width: 34, height: 34, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
+  portalChevronTxt:{ fontSize: 22, fontWeight: '700' },
+  footerArea:      { alignItems: 'center', marginTop: 28 },
+  footerLine:      { width: 32, height: 2, backgroundColor: C.greyLight, borderRadius: 1, marginBottom: 12 },
+  footerTxt:       { fontSize: 11, color: C.grey, letterSpacing: 0.3, marginBottom: 3 },
+  footerVersion:   { fontSize: 10, color: C.greyLight },
+  // Schools
+  listScroll:      { padding: 28, paddingTop: 64 },
+  pageH1:          { fontSize: 28, fontWeight: '800', color: C.navy, marginBottom: 4 },
+  pageH2:          { fontSize: 13, color: C.grey, marginBottom: 28 },
+  schoolRow:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border, shadowColor: C.shadow, shadowOffset: { width: 0, height: 1 }, shadowOpacity: 1, shadowRadius: 4, elevation: 1 },
+  schoolDot:       { width: 12, height: 12, borderRadius: 6, marginRight: 14 },
+  schoolName:      { fontSize: 15, fontWeight: '700', color: C.navy, marginBottom: 2 },
+  schoolSub:       { fontSize: 12, color: C.grey },
+  emptyBox:        { alignItems: 'center', padding: 48 },
+  emptyTxt:        { color: C.grey, fontSize: 14 },
   // Login
-  loginScroll:    { padding: 24, paddingTop: 60, paddingBottom: 40 },
-  schoolPill:     { flexDirection: 'row', alignItems: 'center', borderRadius: 14, padding: 14, marginBottom: 28, borderWidth: 1 },
-  schoolPillDot:  { width: 10, height: 10, borderRadius: 5, marginRight: 12 },
-  schoolPillName: { fontSize: 15, fontWeight: '700', marginBottom: 2 },
-  schoolPillCat:  { fontSize: 11, color: C.muted },
-  toggleRow:      { flexDirection: 'row', gap: 10, marginBottom: 28 },
-  toggleBtn:      { flex: 1, padding: 12, borderRadius: 10, backgroundColor: C.card, borderWidth: 1, borderColor: C.border, alignItems: 'center' },
-  toggleTxt:      { fontSize: 13, color: C.muted, fontWeight: '600' },
-  fieldLabel:     { fontSize: 10, fontWeight: '700', color: C.muted, letterSpacing: 1.2, marginBottom: 8 },
-  inputBox:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.card, borderRadius: 12, borderWidth: 1, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 20 },
-  inputTxt:       { color: C.text, fontSize: 15 },
-  primaryBtn:     { borderRadius: 14, padding: 17, alignItems: 'center', marginTop: 4 },
-  primaryBtnTxt:  { color: '#fff', fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
-  // Back
-  back:           { marginBottom: 24 },
-  backTxt:        { color: C.muted, fontSize: 14 },
+  loginScroll:     { padding: 28, paddingTop: 64, paddingBottom: 48 },
+  schoolBadge:     { backgroundColor: C.white, borderRadius: 14, padding: 16, marginBottom: 28, borderWidth: 1, borderColor: C.border, borderLeftWidth: 4, shadowColor: C.shadow, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 1, shadowRadius: 6, elevation: 2 },
+  schoolBadgeName: { fontSize: 16, fontWeight: '700', color: C.navy, marginBottom: 3 },
+  schoolBadgeCat:  { fontSize: 12, color: C.grey },
+  toggleRow:       { flexDirection: 'row', gap: 10, marginBottom: 28 },
+  toggleBtn:       { flex: 1, padding: 12, borderRadius: 10, backgroundColor: C.white, borderWidth: 1.5, borderColor: C.border, alignItems: 'center' },
+  toggleBtnActive: { backgroundColor: C.navy, borderColor: C.navy },
+  toggleTxt:       { fontSize: 13, color: C.grey, fontWeight: '600' },
+  toggleTxtActive: { color: C.white },
+  label:           { fontSize: 10, fontWeight: '700', color: C.grey, letterSpacing: 1.2, marginBottom: 8 },
+  inputWrap:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 12, borderWidth: 1.5, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 20 },
+  input:           { color: C.black, fontSize: 15 },
+  primaryBtn:      { backgroundColor: C.navy, borderRadius: 14, padding: 17, alignItems: 'center', shadowColor: C.navy, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 10, elevation: 4 },
+  primaryBtnTxt:   { color: C.white, fontSize: 16, fontWeight: '700', letterSpacing: 0.3 },
+  back:            { marginBottom: 24 },
+  backTxt:         { color: C.grey, fontSize: 14 },
   // Logged in
-  successHeader:  { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32, borderBottomWidth: 1 },
-  bigAvatar:      { width: 80, height: 80, borderRadius: 24, alignItems: 'center', justifyContent: 'center', borderWidth: 2, marginBottom: 20 },
-  bigAvatarTxt:   { fontSize: 28, fontWeight: '900' },
-  successName:    { fontSize: 24, fontWeight: '800', color: C.text, marginBottom: 4 },
-  successSchool:  { fontSize: 14, color: C.muted, marginBottom: 16 },
-  chip:           { flexDirection: 'row', alignItems: 'center', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 6, borderWidth: 1, marginBottom: 24 },
-  chipTxt:        { fontSize: 13, fontWeight: '600' },
-  infoRow:        { flexDirection: 'row', backgroundColor: C.card, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: 'hidden', width: '100%' },
-  infoItem:       { flex: 1, padding: 16, alignItems: 'center' },
-  infoLabel:      { fontSize: 9, fontWeight: '700', color: C.muted, letterSpacing: 1, marginBottom: 6 },
-  infoVal:        { fontSize: 15, fontWeight: '700', color: C.text },
-  signOutBtn:     { margin: 24, backgroundColor: C.card, borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: C.border },
-  signOutTxt:     { color: C.muted, fontSize: 14, fontWeight: '600' },
+  successCard:     { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 32 },
+  successAvatar:   { width: 80, height: 80, borderRadius: 24, backgroundColor: C.navy, alignItems: 'center', justifyContent: 'center', marginBottom: 20, shadowColor: C.navy, shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.25, shadowRadius: 14, elevation: 6 },
+  successAvatarTxt:{ fontSize: 26, fontWeight: '900', color: C.white },
+  successName:     { fontSize: 24, fontWeight: '800', color: C.navy, marginBottom: 4 },
+  successSchool:   { fontSize: 14, color: C.grey, marginBottom: 16 },
+  successChip:     { backgroundColor: C.greenLight, borderRadius: 20, paddingHorizontal: 16, paddingVertical: 7, marginBottom: 24 },
+  successChipTxt:  { fontSize: 13, fontWeight: '600', color: C.green },
+  infoRow:         { flexDirection: 'row', backgroundColor: C.white, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: 'hidden', width: '100%' },
+  infoCell:        { flex: 1, padding: 16, alignItems: 'center' },
+  infoCellLabel:   { fontSize: 9, fontWeight: '700', color: C.grey, letterSpacing: 1, marginBottom: 6 },
+  infoCellVal:     { fontSize: 15, fontWeight: '700', color: C.navy },
+  signOutBtn:      { margin: 28, backgroundColor: C.white, borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1.5, borderColor: C.border },
+  signOutTxt:      { color: C.grey, fontSize: 14, fontWeight: '600' },
 });
