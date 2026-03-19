@@ -140,7 +140,7 @@ export default function StudentDashboardScreen() {
       const data = await res.json();
       if (!res.ok) { Alert.alert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
       setSession({ token: data.token, user: data.user });
-      setStep('dashboard');
+      console.log('STEP SET TO DASHBOARD'); setStep('dashboard');
       setDataLoading(true);
       await refresh(data.token, data.user);
       setDataLoading(false);
