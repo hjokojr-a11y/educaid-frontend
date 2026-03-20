@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useRouter } from 'expo-router';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
@@ -51,6 +52,7 @@ function ActionCard({ icon, title, sub, color, onPress }: any) {
 }
 
 export default function SchoolAdminScreen() {
+  const router = useRouter();
   const [token, setToken]       = useState('');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -109,6 +111,38 @@ export default function SchoolAdminScreen() {
   const [alTitle,   setAlTitle]   = useState('');
   const [alDesc,    setAlDesc]    = useState('');
   const [savingAl,  setSavingAl]  = useState(false);
+
+  async function resetStudentRecords(studentId: string, studentName: string) {
+    Alert.alert('Reset Records', `Reset all records for ${studentName}? This cannot be undone.`,
+      [{ text: 'Cancel', style: 'cancel' },
+       { text: 'Reset', style: 'destructive', onPress: async () => {
+        try {
+          const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}/records`, {
+            method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) Alert.alert('✅ Done', `Records for ${studentName} have been reset.`);
+          else Alert.alert('Error', 'Failed to reset records');
+        } catch { Alert.alert('Error', 'Failed to reset records'); }
+       }}]
+    );
+  }
+
+  async function deleteStudent(studentId: string, studentName: string) {
+    Alert.alert('Delete Student', `Permanently delete ${studentName}?`,
+      [{ text: 'Cancel', style: 'cancel' },
+       { text: 'Delete', style: 'destructive', onPress: async () => {
+        try {
+          const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}`, {
+            method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.ok) {
+            Alert.alert('✅ Deleted', `${studentName} has been deleted.`);
+            loadAllStudents(token, user.school.id);
+          } else Alert.alert('Error', 'Failed to delete student');
+        } catch { Alert.alert('Error', 'Failed to delete student'); }
+       }}]
+    );
+  }
 
   const SPORTS = [
     { id:'athletics',   label:'Athletics'    },
@@ -274,6 +308,7 @@ export default function SchoolAdminScreen() {
     return (
       <View style={[A.fill, { backgroundColor: C.canvas }]}>
         <ScrollView contentContainerStyle={A.pad} keyboardShouldPersistTaps="handled">
+          <BackBtn onPress={() => router.back()} label='← Home' />
           <View style={A.loginTop}>
             <View style={A.loginIcon}><Text style={{ fontSize: 28 }}>🏫</Text></View>
             <Text style={A.loginH1}>School Admin</Text>
@@ -355,6 +390,9 @@ export default function SchoolAdminScreen() {
 
       {/* Header */}
       <View style={A.dashHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={A.headerBack}>
+          <Text style={A.headerBackTxt}>←</Text>
+        </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={A.dashHeaderSchool}>{user?.school?.name}</Text>
           <Text style={A.dashHeaderWelcome}>Welcome, {user?.name}</Text>
@@ -447,6 +485,14 @@ export default function SchoolAdminScreen() {
                       <Text style={A.studentName}>{s.name}</Text>
                       <Text style={A.studentSub}>{s.class_name} · {s.student_code}</Text>
                     </View>
+                    <TouchableOpacity style={A.resetBtn}
+                      onPress={() => resetStudentRecords(s.id, s.name)}>
+                      <Text style={A.resetBtnTxt}>↺</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={[A.resetBtn, { backgroundColor: '#FEE2E2', borderColor: '#B91C1C33', marginLeft: 6 }]}
+                      onPress={() => deleteStudent(s.id, s.name)}>
+                      <Text style={A.resetBtnTxt}>🗑️</Text>
+                    </TouchableOpacity>
                   </View>
                 ))
             }
@@ -720,6 +766,10 @@ const A = StyleSheet.create({
   pillActive:        { backgroundColor: C.navy, borderColor: C.navy },
   pillTxt:           { fontSize: 13, color: C.grey, fontWeight: '600' },
   pillTxtActive:     { color: C.white },
+  headerBack:        { width: 36, height: 36, borderRadius: 10, backgroundColor: C.canvas, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border, marginRight: 8 },
+  headerBackTxt:     { fontSize: 18, color: C.navy },
+  resetBtn:          { width: 34, height: 34, borderRadius: 9, backgroundColor: '#EAF2EC', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#1B5E3B33', marginLeft: 6 },
+  resetBtnTxt:       { fontSize: 16 },
   empty:             { alignItems: 'center', padding: 40, backgroundColor: C.white, borderRadius: 14, borderWidth: 1, borderColor: C.border },
   emptyTxt:          { color: C.grey, fontSize: 13 },
 

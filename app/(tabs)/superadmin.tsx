@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
 
@@ -8,7 +9,7 @@ const C = {
   green: '#1B5E3B', greenLight: '#EAF2EC',
   navy: '#0C1F4A', navyLight: '#E8EDF8',
   grey: '#6B7280', greyLight: '#E5E7EB', greyMid: '#9CA3AF', greyDark: '#374151',
-  black: '#0A0C10', border: '#D1D5DB', red: '#B91C1C',
+  black: '#0A0C10', border: '#D1D5DB', red: '#B91C1C', redLight: '#FEE2E2',
 };
 
 function Lbl({ text }: { text: string }) {
@@ -26,7 +27,7 @@ function Field({ value, onChange, placeholder, secure, keyboard }: any) {
   );
 }
 
-function BackBtn({ onPress, label = '← Cancel' }: any) {
+function BackBtn({ onPress, label = '← Back' }: any) {
   return (
     <TouchableOpacity onPress={onPress} style={P.backBtn}>
       <Text style={P.backBtnTxt}>{label}</Text>
@@ -35,6 +36,7 @@ function BackBtn({ onPress, label = '← Cancel' }: any) {
 }
 
 export default function SuperAdminScreen() {
+  const router = useRouter();
   const [token, setToken]           = useState('');
   const [email, setEmail]           = useState('');
   const [password, setPassword]     = useState('');
@@ -112,6 +114,33 @@ export default function SuperAdminScreen() {
     } catch { Alert.alert('Error', 'Failed to create school'); setCreating(false); }
   }
 
+  async function deleteSchool(schoolId: string, schoolName: string) {
+    Alert.alert(
+      'Delete School',
+      `Are you sure you want to delete "${schoolName}"? This will permanently delete all students, classes and records.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Delete', style: 'destructive',
+          onPress: async () => {
+            try {
+              const res = await fetch(`${API_URL}/schools/${schoolId}`, {
+                method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+              });
+              if (res.ok) {
+                Alert.alert('✅ Deleted', `${schoolName} has been deleted.`);
+                loadSchools(token);
+              } else {
+                const data = await res.json();
+                Alert.alert('Error', data.error || 'Failed to delete school');
+              }
+            } catch { Alert.alert('Error', 'Failed to delete school'); }
+          }
+        }
+      ]
+    );
+  }
+
   async function approveStudent(studentId: string, studentName: string) {
     try {
       const res  = await fetch(`${API_URL}/auth/super/approve-student/${studentId}`, {
@@ -130,6 +159,7 @@ export default function SuperAdminScreen() {
     return (
       <View style={[P.fill, { backgroundColor: C.canvas }]}>
         <ScrollView contentContainerStyle={P.pad} keyboardShouldPersistTaps="handled">
+          <BackBtn onPress={() => router.back()} label="← Home" />
           <View style={P.loginTop}>
             <View style={P.loginIcon}><Text style={{ fontSize: 28 }}>👑</Text></View>
             <Text style={P.loginH1}>Super Admin</Text>
@@ -153,11 +183,14 @@ export default function SuperAdminScreen() {
 
       {/* Header */}
       <View style={P.dashHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={P.headerBack}>
+          <Text style={P.headerBackTxt}>←</Text>
+        </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={P.dashHeaderTitle}>Super Admin</Text>
           <Text style={P.dashHeaderSub}>EducAid Platform Management</Text>
         </View>
-        <TouchableOpacity style={P.signOutBtn} onPress={() => setLoggedIn(false)}>
+        <TouchableOpacity style={P.signOutBtn} onPress={() => { setLoggedIn(false); setEmail(''); setPassword(''); }}>
           <Text style={P.signOutBtnTxt}>Sign Out</Text>
         </TouchableOpacity>
       </View>
@@ -204,7 +237,7 @@ export default function SuperAdminScreen() {
               <Text style={P.newSchoolBtnTxt}>+ Register New School</Text>
             </TouchableOpacity>
             {schools.length === 0
-              ? <View style={P.empty}><Text style={P.emptyTxt}>No schools registered yet.{'\n'}Tap above to add one.</Text></View>
+              ? <View style={P.empty}><Text style={P.emptyTxt}>No schools registered yet.</Text></View>
               : schools.map((sc: any) => (
                   <View key={sc.id} style={P.schoolCard}>
                     <View style={[P.schoolDot, { backgroundColor: sc.theme_primary || C.green }]} />
@@ -213,6 +246,11 @@ export default function SuperAdminScreen() {
                       <Text style={P.schoolSub}>{sc.category} · {sc.subsystem?.toUpperCase()}</Text>
                       <Text style={P.schoolMeta}>{sc.student_count || 0} students · {sc.class_count || 0} classes</Text>
                     </View>
+                    <TouchableOpacity
+                      style={P.deleteBtn}
+                      onPress={() => deleteSchool(sc.id, sc.name)}>
+                      <Text style={P.deleteBtnTxt}>🗑️</Text>
+                    </TouchableOpacity>
                   </View>
                 ))
             }
@@ -251,10 +289,8 @@ export default function SuperAdminScreen() {
             <Text style={P.modalTitle}>Register New School</Text>
 
             <Text style={P.secHead}>SCHOOL INFORMATION</Text>
-
             <Lbl text="SCHOOL NAME *" />
             <Field value={schoolName} onChange={setSchoolName} placeholder="e.g. Greenview Academy" />
-
             <Lbl text="CATEGORY *" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
               {CATEGORIES.map(cat => (
@@ -267,7 +303,6 @@ export default function SuperAdminScreen() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-
             <Lbl text="SUBSYSTEM" />
             <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
               {[{ id: 'en', label: '🇬🇧 English' }, { id: 'fr', label: '🇫🇷 French' }].map(s => (
@@ -278,30 +313,22 @@ export default function SuperAdminScreen() {
                 </TouchableOpacity>
               ))}
             </View>
-
             <Lbl text="ADDRESS" />
             <Field value={schoolAddress} onChange={setSchoolAddress} placeholder="Street address" />
-
             <Lbl text="PHONE" />
             <Field value={schoolPhone} onChange={setSchoolPhone} placeholder="+237 6XX XXX XXX" keyboard="phone-pad" />
-
             <Lbl text="SCHOOL EMAIL" />
             <Field value={schoolEmail} onChange={setSchoolEmail} placeholder="info@school.com" keyboard="email-address" />
-
             <Lbl text="SCHOOL MOTTO" />
             <Field value={schoolMotto} onChange={setSchoolMotto} placeholder="e.g. Excellence Through Knowledge" />
-
             <Lbl text="LOCATION" />
             <Field value={location} onChange={setLocation} placeholder="e.g. Yaoundé, Cameroon" />
 
             <Text style={P.secHead}>PRINCIPAL / ADMIN INFORMATION</Text>
-
             <Lbl text="PRINCIPAL NAME" />
             <Field value={principalName} onChange={setPrincipalName} placeholder="Full name" />
-
             <Lbl text="PRINCIPAL PHONE" />
             <Field value={principalPhone} onChange={setPrincipalPhone} placeholder="+237 6XX XXX XXX" keyboard="phone-pad" />
-
             <Lbl text="PRINCIPAL EMAIL * (credentials sent here)" />
             <Field value={principalEmail} onChange={setPrincipalEmail} placeholder="principal@email.com" keyboard="email-address" />
 
@@ -331,7 +358,9 @@ const P = StyleSheet.create({
   fieldTxt:        { color: C.black, fontSize: 15, flex: 1 },
   signInBtn:       { backgroundColor: C.navy, borderRadius: 14, padding: 17, alignItems: 'center' },
   signInBtnTxt:    { color: C.white, fontSize: 16, fontWeight: '700' },
-  dashHeader:      { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: 16, paddingTop: 52, borderBottomWidth: 1, borderBottomColor: C.border },
+  dashHeader:      { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: 16, paddingTop: 52, borderBottomWidth: 1, borderBottomColor: C.border, gap: 10 },
+  headerBack:      { width: 36, height: 36, borderRadius: 10, backgroundColor: C.canvas, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
+  headerBackTxt:   { fontSize: 18, color: C.navy },
   dashHeaderTitle: { fontSize: 18, fontWeight: '800', color: C.navy, marginBottom: 2 },
   dashHeaderSub:   { fontSize: 12, color: C.grey },
   signOutBtn:      { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
@@ -350,6 +379,8 @@ const P = StyleSheet.create({
   schoolName:      { fontSize: 15, fontWeight: '700', color: C.navy, marginBottom: 2 },
   schoolSub:       { fontSize: 12, color: C.grey, marginBottom: 2 },
   schoolMeta:      { fontSize: 11, color: C.greyMid },
+  deleteBtn:       { width: 36, height: 36, borderRadius: 10, backgroundColor: C.redLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.red + '33' },
+  deleteBtnTxt:    { fontSize: 16 },
   pendingCard:     { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border, borderLeftWidth: 3, borderLeftColor: C.red },
   pendingName:     { fontSize: 15, fontWeight: '700', color: C.navy, marginBottom: 2 },
   pendingSub:      { fontSize: 12, color: C.grey, marginBottom: 2 },
