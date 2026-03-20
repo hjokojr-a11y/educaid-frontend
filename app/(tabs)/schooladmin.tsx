@@ -722,5 +722,5 @@ const A = StyleSheet.create({
   pillTxtActive:     { color: C.white },
   empty:             { alignItems: 'center', padding: 40, backgroundColor: C.white, borderRadius: 14, borderWidth: 1, borderColor: C.border },
   emptyTxt:          { color: C.grey, fontSize: 13 },
-  });
+
 });
