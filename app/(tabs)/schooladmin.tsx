@@ -53,6 +53,18 @@ function ActionCard({ icon, title, sub, color, onPress }: any) {
 
 export default function SchoolAdminScreen() {
   const router = useRouter();
+  // Restore session on mount
+  useState(() => {
+    try {
+      const saved = localStorage.getItem('admin_session');
+      if (saved) {
+        const { token: t, user: u } = JSON.parse(saved);
+        setToken(t); setUser(u); setLoggedIn(true);
+        loadClasses(t, u.school.id);
+        loadAllStudents(t, u.school.id);
+      }
+    } catch {}
+  });
   const [token, setToken]       = useState('');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -159,6 +171,7 @@ export default function SchoolAdminScreen() {
       const data = await res.json();
       if (!res.ok) { Alert.alert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
       setToken(data.token); setUser(data.user); setLoggedIn(true); setLoading(false);
+      try { localStorage.setItem('admin_session', JSON.stringify({ token: data.token, user: data.user })); } catch {}
       loadClasses(data.token, data.user.school.id);
       loadAllStudents(data.token, data.user.school.id);
     } catch { Alert.alert('Error', 'Cannot connect to server.'); setLoading(false); }

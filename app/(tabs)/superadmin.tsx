@@ -37,6 +37,16 @@ function BackBtn({ onPress, label = '← Back' }: any) {
 
 export default function SuperAdminScreen() {
   const router = useRouter();
+  useState(() => {
+    try {
+      const saved = localStorage.getItem('super_session');
+      if (saved) {
+        const { token: t } = JSON.parse(saved);
+        setToken(t); setLoggedIn(true);
+        loadSchools(t); loadPending(t);
+      }
+    } catch {}
+  });
   const [token, setToken]           = useState('');
   const [email, setEmail]           = useState('');
   const [password, setPassword]     = useState('');
@@ -73,6 +83,7 @@ export default function SuperAdminScreen() {
       const data = await res.json();
       if (!res.ok) { Alert.alert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
       setToken(data.token); setLoggedIn(true); setLoading(false);
+      try { localStorage.setItem('super_session', JSON.stringify({ token: data.token })); } catch {}
       loadSchools(data.token);
       loadPending(data.token);
     } catch { Alert.alert('Error', 'Cannot connect to server.'); setLoading(false); }
@@ -180,7 +191,7 @@ export default function SuperAdminScreen() {
           <Text style={P.dashHeaderTitle}>Super Admin</Text>
           <Text style={P.dashHeaderSub}>EducAid Platform Management</Text>
         </View>
-        <TouchableOpacity style={P.signOutBtn} onPress={() => { setLoggedIn(false); setEmail(''); setPassword(''); }}>
+        <TouchableOpacity style={P.signOutBtn} onPress={() => { setLoggedIn(false); setEmail(''); setPassword(''); try { localStorage.removeItem('super_session'); } catch {} }}>
           <Text style={P.signOutBtnTxt}>Sign Out</Text>
         </TouchableOpacity>
       </View>

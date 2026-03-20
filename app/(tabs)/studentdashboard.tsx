@@ -112,6 +112,8 @@ export default function StudentDashboardScreen() {
       setDataLoading(true);
       await loadData(data.token, data.user.id);
       setDataLoading(false);
+      // Save session
+      try { localStorage.setItem('student_session', JSON.stringify({ token: data.token, user: data.user, school: selectedSchool })); } catch {}
       // Navigate to dashboard
       setScreen('dashboard');
     } catch (e) {
