@@ -123,7 +123,6 @@ export default function StudentDashboardScreen() {
   function doLogout() {
     setSession(null);
     setScreen('login');
-    setSelectedSchool(null);
     setStudentCode('');
     setPassword('');
     setTab('home');
@@ -173,7 +172,7 @@ export default function StudentDashboardScreen() {
             <View style={S.loginIcon}>
               <Text style={{ fontSize: 28 }}>🎓</Text>
             </View>
-            <Text style={S.loginTitle}>Student Portal v2</Text>
+            <Text style={S.loginTitle}>Student Portal</Text>
             <Text style={S.loginSub}>Sign in to view your academic records</Text>
           </View>
 
