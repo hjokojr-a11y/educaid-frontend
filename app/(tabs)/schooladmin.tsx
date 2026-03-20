@@ -113,35 +113,29 @@ export default function SchoolAdminScreen() {
   const [savingAl,  setSavingAl]  = useState(false);
 
   async function resetStudentRecords(studentId: string, studentName: string) {
-    Alert.alert('Reset Records', `Reset all records for ${studentName}? This cannot be undone.`,
-      [{ text: 'Cancel', style: 'cancel' },
-       { text: 'Reset', style: 'destructive', onPress: async () => {
-        try {
-          const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}/records`, {
-            method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
-          });
-          if (res.ok) Alert.alert('✅ Done', `Records for ${studentName} have been reset.`);
-          else Alert.alert('Error', 'Failed to reset records');
-        } catch { Alert.alert('Error', 'Failed to reset records'); }
-       }}]
-    );
+    if (confirm('Reset all records for ' + studentName + '? This cannot be undone.')) {
+      try {
+        const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}/records`, {
+          method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) Alert.alert('Done', 'Records for ' + studentName + ' have been reset.');
+        else Alert.alert('Error', 'Failed to reset records');
+      } catch { Alert.alert('Error', 'Failed to reset records'); }
+    }
   }
 
   async function deleteStudent(studentId: string, studentName: string) {
-    Alert.alert('Delete Student', `Permanently delete ${studentName}?`,
-      [{ text: 'Cancel', style: 'cancel' },
-       { text: 'Delete', style: 'destructive', onPress: async () => {
-        try {
-          const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}`, {
-            method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
-          });
-          if (res.ok) {
-            Alert.alert('✅ Deleted', `${studentName} has been deleted.`);
-            loadAllStudents(token, user.school.id);
-          } else Alert.alert('Error', 'Failed to delete student');
-        } catch { Alert.alert('Error', 'Failed to delete student'); }
-       }}]
-    );
+    if (confirm('Permanently delete ' + studentName + '?')) {
+      try {
+        const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}`, {
+          method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          Alert.alert('Deleted', studentName + ' has been deleted.');
+          loadAllStudents(token, user.school.id);
+        } else Alert.alert('Error', 'Failed to delete student');
+      } catch { Alert.alert('Error', 'Failed to delete student'); }
+    }
   }
 
   const SPORTS = [

@@ -115,30 +115,20 @@ export default function SuperAdminScreen() {
   }
 
   async function deleteSchool(schoolId: string, schoolName: string) {
-    Alert.alert(
-      'Delete School',
-      `Are you sure you want to delete "${schoolName}"? This will permanently delete all students, classes and records.`,
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Delete', style: 'destructive',
-          onPress: async () => {
-            try {
-              const res = await fetch(`${API_URL}/schools/${schoolId}`, {
-                method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
-              });
-              if (res.ok) {
-                Alert.alert('✅ Deleted', `${schoolName} has been deleted.`);
-                loadSchools(token);
-              } else {
-                const data = await res.json();
-                Alert.alert('Error', data.error || 'Failed to delete school');
-              }
-            } catch { Alert.alert('Error', 'Failed to delete school'); }
-          }
+    if (confirm('Delete ' + schoolName + '? This will permanently delete all students and records.')) {
+      try {
+        const res = await fetch(`${API_URL}/schools/${schoolId}`, {
+          method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
+        });
+        if (res.ok) {
+          Alert.alert('Deleted', schoolName + ' has been deleted.');
+          loadSchools(token);
+        } else {
+          const data = await res.json();
+          Alert.alert('Error', data.error || 'Failed to delete school');
         }
-      ]
-    );
+      } catch { Alert.alert('Error', 'Failed to delete school'); }
+    }
   }
 
   async function approveStudent(studentId: string, studentName: string) {
