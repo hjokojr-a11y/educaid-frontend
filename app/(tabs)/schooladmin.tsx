@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
+
+function showAlert(title: string, msg?: string) { alert(msg ? title + ': ' + msg : title); }
 
 const C = {
   white: '#FFFFFF', canvas: '#F7F8F5',
@@ -53,18 +55,7 @@ function ActionCard({ icon, title, sub, color, onPress }: any) {
 
 export default function SchoolAdminScreen() {
   const router = useRouter();
-  // Restore session on mount
-  useState(() => {
-    try {
-      const saved = localStorage.getItem('admin_session');
-      if (saved) {
-        const { token: t, user: u } = JSON.parse(saved);
-        setToken(t); setUser(u); setLoggedIn(true);
-        loadClasses(t, u.school.id);
-        loadAllStudents(t, u.school.id);
-      }
-    } catch {}
-  });
+
   const [token, setToken]       = useState('');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -90,6 +81,13 @@ export default function SchoolAdminScreen() {
   const [parentName,  setParentName]  = useState('');
   const [parentPhone, setParentPhone] = useState('');
   const [registering, setRegistering] = useState(false);
+  const [studentFirstName, setStudentFirstName] = useState('');
+  const [studentMiddleName, setStudentMiddleName] = useState('');
+  const [studentLastName, setStudentLastName] = useState('');
+  const [studentDOB, setStudentDOB] = useState('');
+  const [studentSex, setStudentSex] = useState('');
+  const [studentReligion, setStudentReligion] = useState('');
+  const [studentPhoto, setStudentPhoto] = useState('');
 
   const [attendance, setAttendance] = useState<any>({});
   const [savingAtt,  setSavingAtt]  = useState(false);
@@ -130,9 +128,9 @@ export default function SchoolAdminScreen() {
         const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}/records`, {
           method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
         });
-        if (res.ok) Alert.alert('Done', 'Records for ' + studentName + ' have been reset.');
-        else Alert.alert('Error', 'Failed to reset records');
-      } catch { Alert.alert('Error', 'Failed to reset records'); }
+        if (res.ok) showAlert('Done', 'Records for ' + studentName + ' have been reset.');
+        else showAlert('Error', 'Failed to reset records');
+      } catch { showAlert('Error', 'Failed to reset records'); }
     }
   }
 
@@ -143,10 +141,10 @@ export default function SchoolAdminScreen() {
           method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
         });
         if (res.ok) {
-          Alert.alert('Deleted', studentName + ' has been deleted.');
+          showAlert('Deleted', studentName + ' has been deleted.');
           loadAllStudents(token, user.school.id);
-        } else Alert.alert('Error', 'Failed to delete student');
-      } catch { Alert.alert('Error', 'Failed to delete student'); }
+        } else showAlert('Error', 'Failed to delete student');
+      } catch { showAlert('Error', 'Failed to delete student'); }
     }
   }
 
@@ -161,7 +159,7 @@ export default function SchoolAdminScreen() {
   ];
 
   async function login() {
-    if (!email || !password) { Alert.alert('Error', 'Enter email and password'); return; }
+    if (!email || !password) { showAlert('Error', 'Enter email and password'); return; }
     setLoading(true);
     try {
       const res  = await fetch(`${API_URL}/auth/admin/login`, {
@@ -169,12 +167,12 @@ export default function SchoolAdminScreen() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (!res.ok) { Alert.alert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
+      if (!res.ok) { showAlert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
       setToken(data.token); setUser(data.user); setLoggedIn(true); setLoading(false);
       try { localStorage.setItem('admin_session', JSON.stringify({ token: data.token, user: data.user })); } catch {}
       loadClasses(data.token, data.user.school.id);
       loadAllStudents(data.token, data.user.school.id);
-    } catch { Alert.alert('Error', 'Cannot connect to server.'); setLoading(false); }
+    } catch { showAlert('Error', 'Cannot connect to server.'); setLoading(false); }
   }
 
   async function loadClasses(t: string, schoolId: string) {
@@ -207,20 +205,28 @@ export default function SchoolAdminScreen() {
   }
 
   async function registerStudent() {
-    if (!studentName || !studentClass) { Alert.alert('Error', 'Student name and class are required'); return; }
+    if ((!studentFirstName && !studentName) || !studentClass) { showAlert('Error', 'Student name and class are required'); return; }
     setRegistering(true);
     try {
+      const fullName = studentFirstName ? [studentFirstName, studentMiddleName, studentLastName].filter(Boolean).join(' ') : studentName;
       const res  = await fetch(`${API_URL}/auth/admin/register-student`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: studentName, classId: studentClass, parentName, parentPhone }),
+        body: JSON.stringify({ 
+          name: fullName, 
+          firstName: studentFirstName, middleName: studentMiddleName, lastName: studentLastName,
+          classId: studentClass, parentName, parentPhone,
+          dateOfBirth: studentDOB, sex: studentSex, religion: studentReligion, photo: studentPhoto
+        }),
       });
       const data = await res.json();
-      if (!res.ok) { Alert.alert('Error', data.error || 'Failed'); setRegistering(false); return; }
-      Alert.alert('✅ Registered!', `${studentName} is pending Super Admin approval.`);
+      if (!res.ok) { showAlert('Error', data.error || 'Failed'); setRegistering(false); return; }
+      showAlert('Registered!', fullName + ' is pending Super Admin approval.');
       setRegistering(false); setShowRegister(false);
+      setStudentFirstName(''); setStudentMiddleName(''); setStudentLastName('');
       setStudentName(''); setStudentClass(''); setParentName(''); setParentPhone('');
-    } catch { Alert.alert('Error', 'Failed'); setRegistering(false); }
+      setStudentDOB(''); setStudentSex(''); setStudentReligion(''); setStudentPhoto('');
+    } catch { showAlert('Error', 'Failed'); setRegistering(false); }
   }
 
   async function saveAttendance() {
@@ -232,14 +238,14 @@ export default function SchoolAdminScreen() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ records, date: today }),
       });
-      if (res.ok) { Alert.alert('✅ Saved!', `Attendance for ${selectedClass.name} recorded.`); setShowAttendance(false); }
-      else Alert.alert('Error', 'Failed to save attendance');
-    } catch { Alert.alert('Error', 'Failed to save attendance'); }
+      if (res.ok) { showAlert('✅ Saved!', `Attendance for ${selectedClass.name} recorded.`); setShowAttendance(false); }
+      else showAlert('Error', 'Failed to save attendance');
+    } catch { showAlert('Error', 'Failed to save attendance'); }
     setSavingAtt(false);
   }
 
   async function saveAcademic() {
-    if (!acaStudent || !acaSubject) { Alert.alert('Error', 'Student and subject are required'); return; }
+    if (!acaStudent || !acaSubject) { showAlert('Error', 'Student and subject are required'); return; }
     setSavingAca(true);
     try {
       const res  = await fetch(`${API_URL}/schools/${user.school.id}/academic`, {
@@ -247,28 +253,28 @@ export default function SchoolAdminScreen() {
         body: JSON.stringify({ studentId: acaStudent, term: acaTerm, subject: acaSubject, score: acaScore ? parseFloat(acaScore) : null, grade: acaGrade, remarks: acaRemarks }),
       });
       const data = await res.json();
-      if (res.ok) { Alert.alert('✅ Saved!', `Academic report for ${acaSubject} saved.`); setShowAcademic(false); setAcaStudent(''); setAcaSubject(''); setAcaScore(''); setAcaGrade(''); setAcaRemarks(''); }
-      else Alert.alert('Error', data.error || 'Failed');
-    } catch { Alert.alert('Error', 'Failed'); }
+      if (res.ok) { showAlert('✅ Saved!', `Academic report for ${acaSubject} saved.`); setShowAcademic(false); setAcaStudent(''); setAcaSubject(''); setAcaScore(''); setAcaGrade(''); setAcaRemarks(''); }
+      else showAlert('Error', data.error || 'Failed');
+    } catch { showAlert('Error', 'Failed'); }
     setSavingAca(false);
   }
 
   async function saveHomework() {
-    if (!hwSubject) { Alert.alert('Error', 'Subject is required'); return; }
+    if (!hwSubject) { showAlert('Error', 'Subject is required'); return; }
     setSavingHw(true);
     try {
       const res = await fetch(`${API_URL}/schools/${user.school.id}/homework`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ classId: hwClass || null, subject: hwSubject, description: hwDesc, hwType, dueDate: hwDue || null }),
       });
-      if (res.ok) { Alert.alert('✅ Posted!', `Homework for ${hwSubject} posted.`); setShowHomework(false); setHwSubject(''); setHwDesc(''); setHwDue(''); setHwClass(''); }
-      else Alert.alert('Error', 'Failed');
-    } catch { Alert.alert('Error', 'Failed'); }
+      if (res.ok) { showAlert('✅ Posted!', `Homework for ${hwSubject} posted.`); setShowHomework(false); setHwSubject(''); setHwDesc(''); setHwDue(''); setHwClass(''); }
+      else showAlert('Error', 'Failed');
+    } catch { showAlert('Error', 'Failed'); }
     setSavingHw(false);
   }
 
   async function saveSports() {
-    if (!spStudent) { Alert.alert('Error', 'Select a student'); return; }
+    if (!spStudent) { showAlert('Error', 'Select a student'); return; }
     setSavingSp(true);
     try {
       const sc  = SPORTS.find(s => s.id === spSport);
@@ -276,37 +282,37 @@ export default function SchoolAdminScreen() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ studentId: spStudent, sport: spSport, sportLabel: sc?.label, term: spTerm, rating: spRating, notes: spNotes }),
       });
-      if (res.ok) { Alert.alert('✅ Saved!', 'Sports assessment recorded.'); setShowSports(false); setSpStudent(''); setSpNotes(''); }
-      else Alert.alert('Error', 'Failed');
-    } catch { Alert.alert('Error', 'Failed'); }
+      if (res.ok) { showAlert('✅ Saved!', 'Sports assessment recorded.'); setShowSports(false); setSpStudent(''); setSpNotes(''); }
+      else showAlert('Error', 'Failed');
+    } catch { showAlert('Error', 'Failed'); }
     setSavingSp(false);
   }
 
   async function saveAnnouncement() {
-    if (!annText) { Alert.alert('Error', 'Enter announcement text'); return; }
+    if (!annText) { showAlert('Error', 'Enter announcement text'); return; }
     setSavingAnn(true);
     try {
       const res = await fetch(`${API_URL}/schools/${user.school.id}/announcements`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ text: annText }),
       });
-      if (res.ok) { Alert.alert('✅ Sent!', 'Announcement posted.'); setShowAnnounce(false); setAnnText(''); }
-      else Alert.alert('Error', 'Failed');
-    } catch { Alert.alert('Error', 'Failed'); }
+      if (res.ok) { showAlert('✅ Sent!', 'Announcement posted.'); setShowAnnounce(false); setAnnText(''); }
+      else showAlert('Error', 'Failed');
+    } catch { showAlert('Error', 'Failed'); }
     setSavingAnn(false);
   }
 
   async function saveAlert() {
-    if (!alStudent || !alTitle) { Alert.alert('Error', 'Select student and enter title'); return; }
+    if (!alStudent || !alTitle) { showAlert('Error', 'Select student and enter title'); return; }
     setSavingAl(true);
     try {
       const res = await fetch(`${API_URL}/schools/${user.school.id}/alerts`, {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ studentId: alStudent, title: alTitle, description: alDesc }),
       });
-      if (res.ok) { Alert.alert('✅ Sent!', 'Alert sent to parent.'); setShowAlert(false); setAlStudent(''); setAlTitle(''); setAlDesc(''); }
-      else Alert.alert('Error', 'Failed');
-    } catch { Alert.alert('Error', 'Failed'); }
+      if (res.ok) { showAlert('✅ Sent!', 'Alert sent to parent.'); setShowAlert(false); setAlStudent(''); setAlTitle(''); setAlDesc(''); }
+      else showAlert('Error', 'Failed');
+    } catch { showAlert('Error', 'Failed'); }
     setSavingAl(false);
   }
 
@@ -517,8 +523,34 @@ export default function SchoolAdminScreen() {
           <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
             <BackBtn onPress={() => setShowRegister(false)} label="← Cancel" />
             <Text style={A.modalTitle}>Register Student</Text>
-            <Lbl text="FULL NAME *" />
-            <Field value={studentName} onChange={setStudentName} placeholder="e.g. John Fon" />
+
+            {/* Photo Upload */}
+            <Lbl text="STUDENT PHOTO" />
+            <TouchableOpacity style={A.photoBox} onPress={() => {
+              const input = document.createElement('input');
+              input.type = 'file'; input.accept = 'image/*';
+              input.onchange = (e: any) => {
+                const file = e.target.files[0];
+                if (file) {
+                  const reader = new FileReader();
+                  reader.onload = (r: any) => setStudentPhoto(r.target.result);
+                  reader.readAsDataURL(file);
+                }
+              };
+              input.click();
+            }}>
+              {studentPhoto
+                ? <Text style={{ fontSize: 40 }}>✅</Text>
+                : <Text style={A.photoBoxTxt}>📷  Tap to upload photo</Text>}
+            </TouchableOpacity>
+
+            <Lbl text="FIRST NAME *" />
+            <Field value={studentFirstName} onChange={setStudentFirstName} placeholder="e.g. John" />
+            <Lbl text="MIDDLE NAME" />
+            <Field value={studentMiddleName} onChange={setStudentMiddleName} placeholder="e.g. Paul" />
+            <Lbl text="LAST NAME *" />
+            <Field value={studentLastName} onChange={setStudentLastName} placeholder="e.g. Fon" />
+
             <Lbl text="CLASS *" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
               {classes.map((cls: any) => (
@@ -529,7 +561,33 @@ export default function SchoolAdminScreen() {
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <Lbl text="PARENT NAME" />
+
+            <Lbl text="DATE OF BIRTH" />
+            <Field value={studentDOB} onChange={setStudentDOB} placeholder="YYYY-MM-DD e.g. 2010-05-20" />
+
+            <Lbl text="SEX" />
+            <View style={{ flexDirection: 'row', gap: 10, marginBottom: 20 }}>
+              {['Male', 'Female'].map(s => (
+                <TouchableOpacity key={s}
+                  style={[A.pill, studentSex === s && A.pillActive, { flex: 1, justifyContent: 'center' }]}
+                  onPress={() => setStudentSex(s)}>
+                  <Text style={[A.pillTxt, studentSex === s && A.pillTxtActive]}>{s}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <Lbl text="RELIGION" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {['Christianity', 'Islam', 'Other'].map(r => (
+                <TouchableOpacity key={r}
+                  style={[A.pill, studentReligion === r && A.pillActive]}
+                  onPress={() => setStudentReligion(r)}>
+                  <Text style={[A.pillTxt, studentReligion === r && A.pillTxtActive]}>{r}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+
+            <Lbl text="PARENT / GUARDIAN NAME" />
             <Field value={parentName} onChange={setParentName} placeholder="Parent or guardian name" />
             <Lbl text="PARENT PHONE" />
             <Field value={parentPhone} onChange={setParentPhone} placeholder="+237..." keyboard="phone-pad" />
@@ -777,6 +835,8 @@ const A = StyleSheet.create({
   headerBackTxt:     { fontSize: 18, color: C.navy },
   resetBtn:          { width: 34, height: 34, borderRadius: 9, backgroundColor: '#EAF2EC', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#1B5E3B33', marginLeft: 6 },
   resetBtnTxt:       { fontSize: 16 },
+  photoBox:          { backgroundColor: C.white, borderRadius: 14, borderWidth: 2, borderColor: C.border, borderStyle: 'dashed', padding: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 20, minHeight: 80 },
+  photoBoxTxt:       { color: C.grey, fontSize: 14, fontWeight: '600' },
   empty:             { alignItems: 'center', padding: 40, backgroundColor: C.white, borderRadius: 14, borderWidth: 1, borderColor: C.border },
   emptyTxt:          { color: C.grey, fontSize: 13 },
 

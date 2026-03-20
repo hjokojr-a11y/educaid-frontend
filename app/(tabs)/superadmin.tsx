@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
+
+function showAlert(title: string, msg?: string) { alert(msg ? title + ': ' + msg : title); }
 
 const C = {
   white: '#FFFFFF', canvas: '#F7F8F5',
@@ -37,16 +39,7 @@ function BackBtn({ onPress, label = '← Back' }: any) {
 
 export default function SuperAdminScreen() {
   const router = useRouter();
-  useState(() => {
-    try {
-      const saved = localStorage.getItem('super_session');
-      if (saved) {
-        const { token: t } = JSON.parse(saved);
-        setToken(t); setLoggedIn(true);
-        loadSchools(t); loadPending(t);
-      }
-    } catch {}
-  });
+
   const [token, setToken]           = useState('');
   const [email, setEmail]           = useState('');
   const [password, setPassword]     = useState('');
@@ -70,10 +63,22 @@ export default function SuperAdminScreen() {
   const [location,        setLocation]        = useState('');
   const [creating,        setCreating]        = useState(false);
 
+  // Restore session on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('super_session');
+      if (saved) {
+        const { token: t } = JSON.parse(saved);
+        setToken(t); setLoggedIn(true);
+        loadSchools(t); loadPending(t);
+      }
+    } catch {}
+  }, []);
+
   const CATEGORIES = ['secondary','primary','nursery','creche','highschool','university','technical','professional'];
 
   async function login() {
-    if (!email || !password) { Alert.alert('Error', 'Enter email and password'); return; }
+    if (!email || !password) { showAlert('Error', 'Enter email and password'); return; }
     setLoading(true);
     try {
       const res  = await fetch(`${API_URL}/auth/super/login`, {
@@ -81,12 +86,12 @@ export default function SuperAdminScreen() {
         body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (!res.ok) { Alert.alert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
+      if (!res.ok) { showAlert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
       setToken(data.token); setLoggedIn(true); setLoading(false);
       try { localStorage.setItem('super_session', JSON.stringify({ token: data.token })); } catch {}
       loadSchools(data.token);
       loadPending(data.token);
-    } catch { Alert.alert('Error', 'Cannot connect to server.'); setLoading(false); }
+    } catch { showAlert('Error', 'Cannot connect to server.'); setLoading(false); }
   }
 
   async function loadSchools(t: string) {
@@ -106,7 +111,7 @@ export default function SuperAdminScreen() {
   }
 
   async function createSchool() {
-    if (!schoolName || !principalEmail) { Alert.alert('Error', 'School name and principal email are required'); return; }
+    if (!schoolName || !principalEmail) { showAlert('Error', 'School name and principal email are required'); return; }
     setCreating(true);
     try {
       const res  = await fetch(`${API_URL}/auth/super/create-school`, {
@@ -115,14 +120,14 @@ export default function SuperAdminScreen() {
         body: JSON.stringify({ name: schoolName, category: schoolCategory, subsystem: schoolSubsystem, address: schoolAddress, phone: schoolPhone, email: schoolEmail, motto: schoolMotto, principalName, principalPhone, principalEmail, location }),
       });
       const data = await res.json();
-      if (!res.ok) { Alert.alert('Error', data.error || 'Failed to create school'); setCreating(false); return; }
-      Alert.alert('✅ School Created!', `${schoolName} has been registered.\n\nAdmin username: ${data.admin?.username}\n\nWelcome email sent to ${principalEmail}`);
+      if (!res.ok) { showAlert('Error', data.error || 'Failed to create school'); setCreating(false); return; }
+      showAlert('✅ School Created!', `${schoolName} has been registered.\n\nAdmin username: ${data.admin?.username}\n\nWelcome email sent to ${principalEmail}`);
       setCreating(false); setShowCreateSchool(false);
       setSchoolName(''); setSchoolCategory('secondary'); setSchoolAddress('');
       setSchoolPhone(''); setSchoolEmail(''); setSchoolMotto('');
       setPrincipalName(''); setPrincipalPhone(''); setPrincipalEmail(''); setLocation('');
       loadSchools(token);
-    } catch { Alert.alert('Error', 'Failed to create school'); setCreating(false); }
+    } catch { showAlert('Error', 'Failed to create school'); setCreating(false); }
   }
 
   async function deleteSchool(schoolId: string, schoolName: string) {
@@ -132,13 +137,13 @@ export default function SuperAdminScreen() {
           method: 'DELETE', headers: { Authorization: `Bearer ${token}` },
         });
         if (res.ok) {
-          Alert.alert('Deleted', schoolName + ' has been deleted.');
+          showAlert('Deleted', schoolName + ' has been deleted.');
           loadSchools(token);
         } else {
           const data = await res.json();
-          Alert.alert('Error', data.error || 'Failed to delete school');
+          showAlert('Error', data.error || 'Failed to delete school');
         }
-      } catch { Alert.alert('Error', 'Failed to delete school'); }
+      } catch { showAlert('Error', 'Failed to delete school'); }
     }
   }
 
@@ -149,10 +154,10 @@ export default function SuperAdminScreen() {
       });
       const data = await res.json();
       if (res.ok) {
-        Alert.alert('✅ Approved!', `${studentName} has been approved.\nStudent ID: ${data.studentCode}\nCredentials sent to school admin.`);
+        showAlert('✅ Approved!', `${studentName} has been approved.\nStudent ID: ${data.studentCode}\nCredentials sent to school admin.`);
         loadPending(token);
-      } else Alert.alert('Error', data.error || 'Failed to approve student');
-    } catch { Alert.alert('Error', 'Failed to approve student'); }
+      } else showAlert('Error', data.error || 'Failed to approve student');
+    } catch { showAlert('Error', 'Failed to approve student'); }
   }
 
   // ── Login ────────────────────────────────────────────────────────────────────

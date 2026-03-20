@@ -1,7 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useRouter } from 'expo-router';
 import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
+
+function showAlert(title: string, msg?: string) { alert(msg ? title + ': ' + msg : title); }
 
 const C = {
   white: '#FFFFFF', canvas: '#F7F8F5',
@@ -30,6 +33,7 @@ function Empty({ icon, msg }: { icon: string; msg: string }) {
 }
 
 export default function StudentDashboardScreen() {
+  const router = useRouter();
   const [screen, setScreen] = useState<'login' | 'pickSchool' | 'dashboard'>('login');
   const [studentCode, setStudentCode] = useState('');
   const [password, setPassword] = useState('');
@@ -86,13 +90,13 @@ export default function StudentDashboardScreen() {
       const r2 = await fetch(`${API_URL}/auth/super/schools`, { headers: { Authorization: `Bearer ${auth.token}` } });
       const d = await r2.json();
       setSchools(d.schools || []);
-    } catch { Alert.alert('Error', 'Cannot connect to server.'); }
+    } catch { showAlert('Error', 'Cannot connect to server.'); }
     setLoadingSchools(false);
   }
 
   async function doLogin() {
-    if (!studentCode || !password) { Alert.alert('Error', 'Please enter your Student ID and password'); return; }
-    if (!selectedSchool) { Alert.alert('Error', 'Please select your school first'); return; }
+    if (!studentCode || !password) { showAlert('Error', 'Please enter your Student ID and password'); return; }
+    if (!selectedSchool) { showAlert('Error', 'Please select your school first'); return; }
     setLoading(true);
     try {
       const res = await fetch(`${API_URL}/auth/student/login`, {
@@ -102,7 +106,7 @@ export default function StudentDashboardScreen() {
       });
       const data = await res.json();
       if (!res.ok) {
-        Alert.alert('Login Failed', data.error || 'Invalid credentials');
+        showAlert('Login Failed', data.error || 'Invalid credentials');
         setLoading(false);
         return;
       }
@@ -117,7 +121,7 @@ export default function StudentDashboardScreen() {
       // Navigate to dashboard
       setScreen('dashboard');
     } catch (e) {
-      Alert.alert('Error', 'Cannot connect to server.');
+      showAlert('Error', 'Cannot connect to server.');
     }
     setLoading(false);
   }
@@ -170,6 +174,9 @@ export default function StudentDashboardScreen() {
       <View style={[S.fill, { backgroundColor: C.canvas }]}>
         <ScrollView contentContainerStyle={S.pad} keyboardShouldPersistTaps="handled">
 
+          <TouchableOpacity style={S.backBtn} onPress={() => router.back()}>
+            <Text style={S.backBtnTxt}>← Home</Text>
+          </TouchableOpacity>
           <View style={S.loginHeader}>
             <View style={S.loginIcon}>
               <Text style={{ fontSize: 28 }}>🎓</Text>
@@ -265,6 +272,9 @@ export default function StudentDashboardScreen() {
 
       {/* Header */}
       <View style={S.dashHeader}>
+        <TouchableOpacity onPress={() => router.back()} style={{ width:36, height:36, borderRadius:10, backgroundColor:C.canvas, alignItems:'center', justifyContent:'center', borderWidth:1, borderColor:C.border }}>
+          <Text style={{ fontSize:18, color:C.navy }}>←</Text>
+        </TouchableOpacity>
         <View style={S.dashAvatar}>
           <Text style={S.dashAvatarTxt}>
             {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
