@@ -154,7 +154,7 @@ export default function HomeScreen() {
       });
       const data = await res.json();
       if (!res.ok) { Alert.alert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
-      setSession({ token: data.token, user: data.user });
+      if (loginType === 'student') { setLoading(false); router.push('/studentdashboard'); return; }
     } catch { Alert.alert('Error', 'Cannot connect to server.'); }
     setLoading(false);
   }

@@ -1,7 +1,7 @@
-import { useState } from 'react';
-import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, Modal } from 'react-native';
+import { useState, useEffect } from 'react';
 
-const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
+const API_URL = "http://192.168.100.158:3000";
 
 export default function SuperAdminScreen() {
   const [token, setToken]             = useState('');
