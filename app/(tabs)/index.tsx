@@ -275,7 +275,7 @@ export default function HomeScreen() {
             <Text style={{ color:C.greyMid, fontSize:22 }}>›</Text>
           </TouchableOpacity>
           <TouchableOpacity style={S.roleCard}
-            onPress={() => { setLoginType('staff'); setStep('login'); }}>
+            onPress={() => router.push('/schooladmin')}>
             <View style={[S.roleCardIcon, { backgroundColor: C.navyLight }]}>
               <Text style={{ fontSize:28 }}>🏫</Text>
             </View>
