@@ -154,7 +154,7 @@ export default function HomeScreen() {
       });
       const data = await res.json();
       if (!res.ok) { Alert.alert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
-      if (loginType === 'student') { setLoading(false); router.push('/studentdashboard'); return; }
+      setSession({ token: data.token, user: data.user });
     } catch { Alert.alert('Error', 'Cannot connect to server.'); }
     setLoading(false);
   }
@@ -264,7 +264,7 @@ export default function HomeScreen() {
           <Text style={S.chooseH1}>Who are you?</Text>
           <Text style={S.chooseH2}>Select your role to continue</Text>
           <TouchableOpacity style={S.roleCard}
-            onPress={() => { setLoginType('student'); setStep('login'); }}>
+            onPress={() => router.push('/studentdashboard')}>
             <View style={[S.roleCardIcon, { backgroundColor: C.greenLight }]}>
               <Text style={{ fontSize:28 }}>🎓</Text>
             </View>
@@ -280,7 +280,7 @@ export default function HomeScreen() {
               <Text style={{ fontSize:28 }}>🏫</Text>
             </View>
             <View style={{ flex:1 }}>
-              <Text style={S.roleCardTitle}>School Admin</Text>
+              <Text style={S.roleCardTitle}>School Admin / Staff</Text>
               <Text style={S.roleCardSub}>Manage attendance, grades & more</Text>
             </View>
             <Text style={{ color:C.greyMid, fontSize:22 }}>›</Text>
