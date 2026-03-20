@@ -1,301 +1,341 @@
-import { StyleSheet, Text, View, TouchableOpacity, TextInput, ScrollView, ActivityIndicator, Alert, Modal } from 'react-native';
 import { useState } from 'react';
+import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
-const API_URL = "http://192.168.100.158:3000";
+const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
+
+const C = {
+  white: '#FFFFFF', canvas: '#F7F8F5',
+  green: '#1B5E3B', greenLight: '#EAF2EC', greenMid: '#2E7D52',
+  navy: '#0C1F4A', navyLight: '#E8EDF8',
+  grey: '#6B7280', greyLight: '#E5E7EB', greyMid: '#9CA3AF', greyDark: '#374151',
+  black: '#0A0C10', border: '#D1D5DB',
+  red: '#B91C1C', amber: '#B45309', purple: '#6D28D9', teal: '#0E7490', blue: '#1D4ED8',
+};
+
+function Lbl({ text }: { text: string }) {
+  return <Text style={A.lbl}>{text}</Text>;
+}
+
+function Field({ value, onChange, placeholder, secure, keyboard }: any) {
+  return (
+    <View style={A.fieldWrap}>
+      <TextInput style={A.fieldTxt} value={value} onChangeText={onChange}
+        placeholder={placeholder} placeholderTextColor={C.greyMid}
+        secureTextEntry={secure} autoCapitalize="none"
+        keyboardType={keyboard || 'default'} />
+    </View>
+  );
+}
+
+function BackBtn({ onPress, label = '← Back' }: any) {
+  return (
+    <TouchableOpacity onPress={onPress} style={A.backBtn}>
+      <Text style={A.backBtnTxt}>{label}</Text>
+    </TouchableOpacity>
+  );
+}
+
+function ActionCard({ icon, title, sub, color, onPress }: any) {
+  return (
+    <TouchableOpacity style={[A.actionCard, { borderLeftColor: color }]} onPress={onPress} activeOpacity={0.75}>
+      <View style={[A.actionIcon, { backgroundColor: color + '15' }]}>
+        <Text style={{ fontSize: 22 }}>{icon}</Text>
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={A.actionTitle}>{title}</Text>
+        <Text style={A.actionSub}>{sub}</Text>
+      </View>
+      <Text style={{ color: C.greyMid, fontSize: 20 }}>›</Text>
+    </TouchableOpacity>
+  );
+}
 
 export default function SchoolAdminScreen() {
-  const [token, setToken]         = useState('');
-  const [email, setEmail]         = useState('');
-  const [password, setPassword]   = useState('');
-  const [loading, setLoading]     = useState(false);
-  const [loggedIn, setLoggedIn]   = useState(false);
-  const [user, setUser]           = useState(null);
-  const [tab, setTab]             = useState('dashboard');
-  const [classes, setClasses]     = useState([]);
-  const [students, setStudents]   = useState([]);
-  const [selectedClass, setSelectedClass] = useState(null);
-  const [selectedStudent, setSelectedStudent] = useState(null);
-  const [allStudents, setAllStudents] = useState([]);
+  const [token, setToken]       = useState('');
+  const [email, setEmail]       = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading]   = useState(false);
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [user, setUser]         = useState<any>(null);
+  const [tab, setTab]           = useState('home');
+  const [classes, setClasses]   = useState<any[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
+  const [selectedClass, setSelectedClass] = useState<any>(null);
+  const [allStudents, setAllStudents]     = useState<any[]>([]);
 
-  // Modals
-  const [showRegister, setShowRegister]     = useState(false);
+  const [showRegister,   setShowRegister]   = useState(false);
   const [showAttendance, setShowAttendance] = useState(false);
-  const [showAcademic, setShowAcademic]     = useState(false);
-  const [showHomework, setShowHomework]     = useState(false);
-  const [showSports, setShowSports]         = useState(false);
-  const [showAnnounce, setShowAnnounce]     = useState(false);
-  const [showAlert, setShowAlert]           = useState(false);
+  const [showAcademic,   setShowAcademic]   = useState(false);
+  const [showHomework,   setShowHomework]   = useState(false);
+  const [showSports,     setShowSports]     = useState(false);
+  const [showAnnounce,   setShowAnnounce]   = useState(false);
+  const [showAlert,      setShowAlert]      = useState(false);
 
-  // Register student
-  const [studentName, setStudentName]   = useState('');
+  const [studentName, setStudentName] = useState('');
   const [studentClass, setStudentClass] = useState('');
-  const [parentName, setParentName]     = useState('');
-  const [parentPhone, setParentPhone]   = useState('');
-  const [registering, setRegistering]   = useState(false);
+  const [parentName,  setParentName]  = useState('');
+  const [parentPhone, setParentPhone] = useState('');
+  const [registering, setRegistering] = useState(false);
 
-  // Attendance
-  const [attendance, setAttendance]   = useState({});
-  const [savingAtt, setSavingAtt]     = useState(false);
+  const [attendance, setAttendance] = useState<any>({});
+  const [savingAtt,  setSavingAtt]  = useState(false);
 
-  // Academic report
-  const [acaStudent, setAcaStudent]   = useState('');
-  const [acaTerm, setAcaTerm]         = useState('Term 1');
-  const [acaSubject, setAcaSubject]   = useState('');
-  const [acaScore, setAcaScore]       = useState('');
-  const [acaGrade, setAcaGrade]       = useState('');
-  const [acaRemarks, setAcaRemarks]   = useState('');
-  const [savingAca, setSavingAca]     = useState(false);
+  const [acaStudent,  setAcaStudent]  = useState('');
+  const [acaTerm,     setAcaTerm]     = useState('Term 1');
+  const [acaSubject,  setAcaSubject]  = useState('');
+  const [acaScore,    setAcaScore]    = useState('');
+  const [acaGrade,    setAcaGrade]    = useState('');
+  const [acaRemarks,  setAcaRemarks]  = useState('');
+  const [savingAca,   setSavingAca]   = useState(false);
 
-  // Homework
-  const [hwClass, setHwClass]         = useState('');
-  const [hwSubject, setHwSubject]     = useState('');
-  const [hwDesc, setHwDesc]           = useState('');
-  const [hwDue, setHwDue]             = useState('');
-  const [hwType, setHwType]           = useState('new');
-  const [savingHw, setSavingHw]       = useState(false);
+  const [hwClass,   setHwClass]   = useState('');
+  const [hwSubject, setHwSubject] = useState('');
+  const [hwDesc,    setHwDesc]    = useState('');
+  const [hwDue,     setHwDue]     = useState('');
+  const [hwType,    setHwType]    = useState('new');
+  const [savingHw,  setSavingHw]  = useState(false);
 
-  // Sports
-  const [spStudent, setSpStudent]     = useState('');
-  const [spSport, setSpSport]         = useState('general');
-  const [spTerm, setSpTerm]           = useState('Term 1');
-  const [spRating, setSpRating]       = useState('good');
-  const [spNotes, setSpNotes]         = useState('');
-  const [savingSp, setSavingSp]       = useState(false);
+  const [spStudent, setSpStudent] = useState('');
+  const [spSport,   setSpSport]   = useState('general');
+  const [spTerm,    setSpTerm]    = useState('Term 1');
+  const [spRating,  setSpRating]  = useState('good');
+  const [spNotes,   setSpNotes]   = useState('');
+  const [savingSp,  setSavingSp]  = useState(false);
 
-  // Announcement
-  const [annText, setAnnText]         = useState('');
-  const [savingAnn, setSavingAnn]     = useState(false);
+  const [annText,   setAnnText]   = useState('');
+  const [savingAnn, setSavingAnn] = useState(false);
 
-  // Alert
-  const [alStudent, setAlStudent]     = useState('');
-  const [alTitle, setAlTitle]         = useState('');
-  const [alDesc, setAlDesc]           = useState('');
-  const [savingAl, setSavingAl]       = useState(false);
+  const [alStudent, setAlStudent] = useState('');
+  const [alTitle,   setAlTitle]   = useState('');
+  const [alDesc,    setAlDesc]    = useState('');
+  const [savingAl,  setSavingAl]  = useState(false);
 
-  const T = user?.school?.theme || { primary: '#1a7a6e', secondary: '#e8b24a', dark: '#0f1923' };
+  const SPORTS = [
+    { id:'athletics',   label:'Athletics'    },
+    { id:'football',    label:'Football'     },
+    { id:'basketball',  label:'Basketball'   },
+    { id:'volleyball',  label:'Volleyball'   },
+    { id:'swimming',    label:'Swimming'     },
+    { id:'gymnastics',  label:'Gymnastics'   },
+    { id:'general',     label:'Physical Ed.' },
+  ];
 
   async function login() {
-    if (!email || !password) { Alert.alert("Error", "Enter email and password"); return; }
+    if (!email || !password) { Alert.alert('Error', 'Enter email and password'); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/auth/admin/login`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password })
+      const res  = await fetch(`${API_URL}/auth/admin/login`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
-      if (!res.ok) { Alert.alert("Login Failed", data.error || "Invalid credentials"); setLoading(false); return; }
+      if (!res.ok) { Alert.alert('Login Failed', data.error || 'Invalid credentials'); setLoading(false); return; }
       setToken(data.token); setUser(data.user); setLoggedIn(true); setLoading(false);
       loadClasses(data.token, data.user.school.id);
       loadAllStudents(data.token, data.user.school.id);
-    } catch { Alert.alert("Error", "Cannot connect to server."); setLoading(false); }
+    } catch { Alert.alert('Error', 'Cannot connect to server.'); setLoading(false); }
   }
 
-  async function loadClasses(t, schoolId) {
+  async function loadClasses(t: string, schoolId: string) {
     try {
-      const res = await fetch(`${API_URL}/schools/${schoolId}/classes`, { headers: { Authorization: `Bearer ${t || token}` } });
+      const res  = await fetch(`${API_URL}/schools/${schoolId}/classes`, { headers: { Authorization: `Bearer ${t || token}` } });
       const data = await res.json();
       if (res.ok) setClasses(data.classes || []);
     } catch {}
   }
 
-  async function loadAllStudents(t, schoolId) {
+  async function loadAllStudents(t: string, schoolId: string) {
     try {
-      const res = await fetch(`${API_URL}/schools/${schoolId}/students`, { headers: { Authorization: `Bearer ${t || token}` } });
+      const res  = await fetch(`${API_URL}/schools/${schoolId}/students`, { headers: { Authorization: `Bearer ${t || token}` } });
       const data = await res.json();
       if (res.ok) setAllStudents(data.students || []);
     } catch {}
   }
 
-  async function loadStudents(classId) {
+  async function loadStudents(classId: string) {
     try {
-      const res = await fetch(`${API_URL}/schools/${user.school.id}/students?classId=${classId}`, { headers: { Authorization: `Bearer ${token}` } });
+      const res  = await fetch(`${API_URL}/schools/${user.school.id}/students?classId=${classId}`, { headers: { Authorization: `Bearer ${token}` } });
       const data = await res.json();
       if (res.ok) {
         setStudents(data.students || []);
-        const att = {};
-        (data.students || []).forEach(s => { att[s.id] = 'present'; });
+        const att: any = {};
+        (data.students || []).forEach((s: any) => { att[s.id] = 'present'; });
         setAttendance(att);
       }
     } catch {}
   }
 
   async function registerStudent() {
-    if (!studentName || !studentClass) { Alert.alert("Error", "Student name and class are required"); return; }
+    if (!studentName || !studentClass) { Alert.alert('Error', 'Student name and class are required'); return; }
     setRegistering(true);
     try {
-      const res = await fetch(`${API_URL}/auth/admin/register-student`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ name: studentName, classId: studentClass, parentName, parentPhone })
+      const res  = await fetch(`${API_URL}/auth/admin/register-student`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ name: studentName, classId: studentClass, parentName, parentPhone }),
       });
       const data = await res.json();
-      if (!res.ok) { Alert.alert("Error", data.error || "Failed"); setRegistering(false); return; }
-      Alert.alert("✅ Registered!", `${studentName} is pending Super Admin approval.`);
+      if (!res.ok) { Alert.alert('Error', data.error || 'Failed'); setRegistering(false); return; }
+      Alert.alert('✅ Registered!', `${studentName} is pending Super Admin approval.`);
       setRegistering(false); setShowRegister(false);
       setStudentName(''); setStudentClass(''); setParentName(''); setParentPhone('');
-    } catch { Alert.alert("Error", "Failed"); setRegistering(false); }
+    } catch { Alert.alert('Error', 'Failed'); setRegistering(false); }
   }
 
   async function saveAttendance() {
     setSavingAtt(true);
     try {
-      const today = new Date().toISOString().slice(0, 10);
-      const records = students.map(s => ({ studentId: s.id, classId: selectedClass.id, status: attendance[s.id] || 'present' }));
-      const res = await fetch(`${API_URL}/schools/${user.school.id}/attendance/bulk`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ records, date: today })
+      const today   = new Date().toISOString().slice(0, 10);
+      const records = students.map((s: any) => ({ studentId: s.id, classId: selectedClass.id, status: attendance[s.id] || 'present' }));
+      const res     = await fetch(`${API_URL}/schools/${user.school.id}/attendance/bulk`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ records, date: today }),
       });
-      if (res.ok) { Alert.alert("✅ Saved!", `Attendance for ${selectedClass.name} recorded.`); setShowAttendance(false); }
-      else Alert.alert("Error", "Failed to save attendance");
-    } catch { Alert.alert("Error", "Failed to save attendance"); }
+      if (res.ok) { Alert.alert('✅ Saved!', `Attendance for ${selectedClass.name} recorded.`); setShowAttendance(false); }
+      else Alert.alert('Error', 'Failed to save attendance');
+    } catch { Alert.alert('Error', 'Failed to save attendance'); }
     setSavingAtt(false);
   }
 
   async function saveAcademic() {
-    if (!acaStudent || !acaSubject) { Alert.alert("Error", "Student and subject are required"); return; }
+    if (!acaStudent || !acaSubject) { Alert.alert('Error', 'Student and subject are required'); return; }
     setSavingAca(true);
     try {
-      const res = await fetch(`${API_URL}/schools/${user.school.id}/academic`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ studentId: acaStudent, term: acaTerm, subject: acaSubject, score: acaScore ? parseFloat(acaScore) : null, grade: acaGrade, remarks: acaRemarks })
+      const res  = await fetch(`${API_URL}/schools/${user.school.id}/academic`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ studentId: acaStudent, term: acaTerm, subject: acaSubject, score: acaScore ? parseFloat(acaScore) : null, grade: acaGrade, remarks: acaRemarks }),
       });
       const data = await res.json();
-      if (res.ok) {
-        Alert.alert("✅ Saved!", `Academic report for ${acaSubject} saved.`);
-        setShowAcademic(false); setAcaStudent(''); setAcaSubject(''); setAcaScore(''); setAcaGrade(''); setAcaRemarks('');
-      } else Alert.alert("Error", data.error || "Failed");
-    } catch { Alert.alert("Error", "Failed"); }
+      if (res.ok) { Alert.alert('✅ Saved!', `Academic report for ${acaSubject} saved.`); setShowAcademic(false); setAcaStudent(''); setAcaSubject(''); setAcaScore(''); setAcaGrade(''); setAcaRemarks(''); }
+      else Alert.alert('Error', data.error || 'Failed');
+    } catch { Alert.alert('Error', 'Failed'); }
     setSavingAca(false);
   }
 
   async function saveHomework() {
-    if (!hwSubject) { Alert.alert("Error", "Subject is required"); return; }
+    if (!hwSubject) { Alert.alert('Error', 'Subject is required'); return; }
     setSavingHw(true);
     try {
       const res = await fetch(`${API_URL}/schools/${user.school.id}/homework`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ classId: hwClass || null, subject: hwSubject, description: hwDesc, hwType, dueDate: hwDue || null })
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ classId: hwClass || null, subject: hwSubject, description: hwDesc, hwType, dueDate: hwDue || null }),
       });
-      if (res.ok) {
-        Alert.alert("✅ Posted!", `Homework for ${hwSubject} posted.`);
-        setShowHomework(false); setHwSubject(''); setHwDesc(''); setHwDue(''); setHwClass('');
-      } else Alert.alert("Error", "Failed to post homework");
-    } catch { Alert.alert("Error", "Failed"); }
+      if (res.ok) { Alert.alert('✅ Posted!', `Homework for ${hwSubject} posted.`); setShowHomework(false); setHwSubject(''); setHwDesc(''); setHwDue(''); setHwClass(''); }
+      else Alert.alert('Error', 'Failed');
+    } catch { Alert.alert('Error', 'Failed'); }
     setSavingHw(false);
   }
 
   async function saveSports() {
-    if (!spStudent) { Alert.alert("Error", "Select a student"); return; }
+    if (!spStudent) { Alert.alert('Error', 'Select a student'); return; }
     setSavingSp(true);
     try {
-      const sc = SPORTS.find(s => s.id === spSport);
+      const sc  = SPORTS.find(s => s.id === spSport);
       const res = await fetch(`${API_URL}/schools/${user.school.id}/sports`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ studentId: spStudent, sport: spSport, sportLabel: sc?.label, term: spTerm, rating: spRating, notes: spNotes })
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ studentId: spStudent, sport: spSport, sportLabel: sc?.label, term: spTerm, rating: spRating, notes: spNotes }),
       });
-      if (res.ok) {
-        Alert.alert("✅ Saved!", "Sports assessment recorded.");
-        setShowSports(false); setSpStudent(''); setSpNotes('');
-      } else Alert.alert("Error", "Failed");
-    } catch { Alert.alert("Error", "Failed"); }
+      if (res.ok) { Alert.alert('✅ Saved!', 'Sports assessment recorded.'); setShowSports(false); setSpStudent(''); setSpNotes(''); }
+      else Alert.alert('Error', 'Failed');
+    } catch { Alert.alert('Error', 'Failed'); }
     setSavingSp(false);
   }
 
   async function saveAnnouncement() {
-    if (!annText) { Alert.alert("Error", "Enter announcement text"); return; }
+    if (!annText) { Alert.alert('Error', 'Enter announcement text'); return; }
     setSavingAnn(true);
     try {
       const res = await fetch(`${API_URL}/schools/${user.school.id}/announcements`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ text: annText })
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ text: annText }),
       });
-      if (res.ok) { Alert.alert("✅ Sent!", "Announcement posted."); setShowAnnounce(false); setAnnText(''); }
-      else Alert.alert("Error", "Failed");
-    } catch { Alert.alert("Error", "Failed"); }
+      if (res.ok) { Alert.alert('✅ Sent!', 'Announcement posted.'); setShowAnnounce(false); setAnnText(''); }
+      else Alert.alert('Error', 'Failed');
+    } catch { Alert.alert('Error', 'Failed'); }
     setSavingAnn(false);
   }
 
   async function saveAlert() {
-    if (!alStudent || !alTitle) { Alert.alert("Error", "Select student and enter title"); return; }
+    if (!alStudent || !alTitle) { Alert.alert('Error', 'Select student and enter title'); return; }
     setSavingAl(true);
     try {
       const res = await fetch(`${API_URL}/schools/${user.school.id}/alerts`, {
-        method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ studentId: alStudent, title: alTitle, description: alDesc })
+        method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ studentId: alStudent, title: alTitle, description: alDesc }),
       });
-      if (res.ok) { Alert.alert("✅ Sent!", "Alert sent to parent."); setShowAlert(false); setAlStudent(''); setAlTitle(''); setAlDesc(''); }
-      else Alert.alert("Error", "Failed");
-    } catch { Alert.alert("Error", "Failed"); }
+      if (res.ok) { Alert.alert('✅ Sent!', 'Alert sent to parent.'); setShowAlert(false); setAlStudent(''); setAlTitle(''); setAlDesc(''); }
+      else Alert.alert('Error', 'Failed');
+    } catch { Alert.alert('Error', 'Failed'); }
     setSavingAl(false);
   }
 
-  const SPORTS = [
-    { id:'athletics', label:'Athletics' }, { id:'football', label:'Football' },
-    { id:'basketball', label:'Basketball' }, { id:'volleyball', label:'Volleyball' },
-    { id:'swimming', label:'Swimming' }, { id:'gymnastics', label:'Gymnastics' },
-    { id:'general', label:'Physical Ed.' },
-  ];
-
-  // Login Screen
+  // ── Login ────────────────────────────────────────────────────────────────────
   if (!loggedIn) {
     return (
-      <View style={[styles.container, { backgroundColor: '#0f1923' }]}>
-        <ScrollView contentContainerStyle={styles.loginScroll}>
-          <Text style={styles.appTitle}>EducAid</Text>
-          <View style={[styles.badge, { backgroundColor: '#1a7a6e' }]}>
-            <Text style={styles.badgeTitle}>🏫 School Admin</Text>
-            <Text style={styles.badgeSub}>School Management</Text>
+      <View style={[A.fill, { backgroundColor: C.canvas }]}>
+        <ScrollView contentContainerStyle={A.pad} keyboardShouldPersistTaps="handled">
+          <View style={A.loginTop}>
+            <View style={A.loginIcon}><Text style={{ fontSize: 28 }}>🏫</Text></View>
+            <Text style={A.loginH1}>School Admin</Text>
+            <Text style={A.loginH2}>Sign in to manage your school</Text>
           </View>
-          <Text style={styles.label}>Staff Email</Text>
-          <TextInput style={styles.input} placeholder="admin@school.educaid.io" placeholderTextColor="#7a7066" value={email} onChangeText={setEmail} autoCapitalize="none" keyboardType="email-address" />
-          <Text style={styles.label}>Password</Text>
-          <TextInput style={styles.input} placeholder="Password" placeholderTextColor="#7a7066" value={password} onChangeText={setPassword} secureTextEntry />
-          <TouchableOpacity style={[styles.btn, { backgroundColor: '#1a7a6e' }]} onPress={login} disabled={loading}>
-            {loading ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>Sign In →</Text>}
+          <Lbl text="EMAIL ADDRESS" />
+          <Field value={email} onChange={setEmail} placeholder="admin@school.educaid.io" keyboard="email-address" />
+          <Lbl text="PASSWORD" />
+          <Field value={password} onChange={setPassword} placeholder="Your password" secure />
+          <TouchableOpacity style={A.signInBtn} onPress={login} disabled={loading}>
+            {loading ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Sign In →</Text>}
           </TouchableOpacity>
         </ScrollView>
       </View>
     );
   }
 
-  // Attendance Modal
+  // ── Attendance Screen ────────────────────────────────────────────────────────
   if (showAttendance && selectedClass) {
     return (
-      <View style={[styles.container, { backgroundColor: '#f5f0e8' }]}>
-        <View style={[styles.attHeader, { backgroundColor: T.primary }]}>
-          <TouchableOpacity onPress={() => setShowAttendance(false)}><Text style={styles.attBack}>← Back</Text></TouchableOpacity>
-          <Text style={styles.attTitle}>{selectedClass.name} — Attendance</Text>
-          <Text style={styles.attDate}>{new Date().toDateString()}</Text>
+      <View style={[A.fill, { backgroundColor: C.canvas }]}>
+        <View style={A.screenHeader}>
+          <BackBtn onPress={() => setShowAttendance(false)} label="← Back" />
+          <View style={{ flex: 1 }}>
+            <Text style={A.screenHeaderTitle}>{selectedClass.name}</Text>
+            <Text style={A.screenHeaderSub}>Attendance · {new Date().toDateString()}</Text>
+          </View>
         </View>
-        <ScrollView style={styles.attContent}>
-          {students.length === 0 ? (
-            <View style={styles.emptyCard}><Text style={styles.emptyIcon}>👥</Text><Text style={styles.emptyText}>No students in this class yet.</Text></View>
-          ) : students.map(student => (
-            <View key={student.id} style={styles.attCard}>
-              <View style={[styles.attAvatar, { backgroundColor: student.avatar_color || T.primary }]}>
-                <Text style={styles.attAvatarText}>{student.initials || student.name[0]}</Text>
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.attName}>{student.name}</Text>
-                <Text style={styles.attCode}>{student.student_code}</Text>
-              </View>
-              <View style={styles.attBtns}>
-                {['present','absent','late','excused'].map(status => (
-                  <TouchableOpacity key={status}
-                    style={[styles.attBtn, attendance[student.id] === status && { backgroundColor: status==='present'?'#22c55e':status==='absent'?'#ef4444':status==='late'?'#eab308':'#3b82f6' }]}
-                    onPress={() => setAttendance({ ...attendance, [student.id]: status })}>
-                    <Text style={[styles.attBtnText, attendance[student.id] === status && { color: '#fff' }]}>
-                      {status==='present'?'P':status==='absent'?'A':status==='late'?'L':'E'}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
-            </View>
-          ))}
+        <ScrollView style={{ flex: 1, padding: 16 }}>
+          {students.length === 0
+            ? <View style={A.empty}><Text style={A.emptyTxt}>No students in this class yet.</Text></View>
+            : students.map((s: any) => (
+                <View key={s.id} style={A.attCard}>
+                  <View style={[A.attAvatar, { backgroundColor: C.navy }]}>
+                    <Text style={A.attAvatarTxt}>{s.initials || s.name[0]}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={A.attName}>{s.name}</Text>
+                    <Text style={A.attCode}>{s.student_code}</Text>
+                  </View>
+                  <View style={A.attBtns}>
+                    {[
+                      { id: 'present', label: 'P', color: C.green },
+                      { id: 'absent',  label: 'A', color: C.red   },
+                      { id: 'late',    label: 'L', color: C.amber  },
+                      { id: 'excused', label: 'E', color: C.blue   },
+                    ].map(st => (
+                      <TouchableOpacity key={st.id}
+                        style={[A.attBtn, attendance[s.id] === st.id && { backgroundColor: st.color, borderColor: st.color }]}
+                        onPress={() => setAttendance({ ...attendance, [s.id]: st.id })}>
+                        <Text style={[A.attBtnTxt, attendance[s.id] === st.id && { color: C.white }]}>{st.label}</Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                </View>
+              ))}
+          <View style={{ height: 100 }} />
         </ScrollView>
         {students.length > 0 && (
-          <View style={styles.attFooter}>
-            <TouchableOpacity style={[styles.btn, { backgroundColor: T.primary, margin: 16 }]} onPress={saveAttendance} disabled={savingAtt}>
-              {savingAtt ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>✅ Save Attendance</Text>}
+          <View style={A.saveBar}>
+            <TouchableOpacity style={A.saveBtn} onPress={saveAttendance} disabled={savingAtt}>
+              {savingAtt ? <ActivityIndicator color={C.white} /> : <Text style={A.saveBtnTxt}>Save Attendance</Text>}
             </TouchableOpacity>
           </View>
         )}
@@ -303,331 +343,384 @@ export default function SchoolAdminScreen() {
     );
   }
 
-  // Dashboard
+  // ── Dashboard ────────────────────────────────────────────────────────────────
+  const TABS = [
+    { id: 'home',       label: '🏠 Home'       },
+    { id: 'attendance', label: '📅 Attendance'  },
+    { id: 'students',   label: '👥 Students'    },
+  ];
+
   return (
-    <View style={[styles.container, { backgroundColor: '#f5f0e8' }]}>
-      <View style={[styles.header, { backgroundColor: T.dark }]}>
-        <View>
-          <Text style={styles.headerTitle}>{user?.school?.name}</Text>
-          <Text style={styles.headerSub}>Welcome, {user?.name}</Text>
+    <View style={[A.fill, { backgroundColor: C.canvas }]}>
+
+      {/* Header */}
+      <View style={A.dashHeader}>
+        <View style={{ flex: 1 }}>
+          <Text style={A.dashHeaderSchool}>{user?.school?.name}</Text>
+          <Text style={A.dashHeaderWelcome}>Welcome, {user?.name}</Text>
         </View>
-        <TouchableOpacity onPress={() => setLoggedIn(false)} style={styles.signOutBtn}>
-          <Text style={styles.signOutText}>Sign Out</Text>
+        <TouchableOpacity style={A.signOutBtn} onPress={() => setLoggedIn(false)}>
+          <Text style={A.signOutBtnTxt}>Sign Out</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={[styles.statsRow, { backgroundColor: T.dark }]}>
-        <View style={styles.statCard}><Text style={styles.statNum}>{classes.length}</Text><Text style={styles.statLabel}>Classes</Text></View>
-        <View style={styles.statCard}><Text style={styles.statNum}>{allStudents.length}</Text><Text style={styles.statLabel}>Students</Text></View>
-        <TouchableOpacity style={[styles.statCard, { backgroundColor: T.primary }]} onPress={() => setShowRegister(true)}>
-          <Text style={styles.statNum}>+</Text><Text style={styles.statLabel}>Add Student</Text>
+      {/* Stats strip */}
+      <View style={A.statsStrip}>
+        <View style={A.statItem}>
+          <Text style={A.statNum}>{classes.length}</Text>
+          <Text style={A.statLbl}>Classes</Text>
+        </View>
+        <View style={[A.statItem, { borderLeftWidth: 1, borderLeftColor: C.border }]}>
+          <Text style={A.statNum}>{allStudents.length}</Text>
+          <Text style={A.statLbl}>Students</Text>
+        </View>
+        <TouchableOpacity style={[A.statItem, { borderLeftWidth: 1, borderLeftColor: C.border }]}
+          onPress={() => setShowRegister(true)}>
+          <Text style={[A.statNum, { color: C.green }]}>+</Text>
+          <Text style={A.statLbl}>Add Student</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.tabRow}>
-        {['dashboard','attendance','students'].map(t => (
-          <TouchableOpacity key={t} style={[styles.tabBtn, tab===t && { borderBottomColor: T.primary, borderBottomWidth: 2 }]} onPress={() => setTab(t)}>
-            <Text style={[styles.tabText, tab===t && { color: T.primary }]}>
-              {t==='dashboard'?'🏠 Home':t==='attendance'?'📅 Attendance':'👥 Students'}
-            </Text>
+      {/* Tab bar */}
+      <View style={A.tabBar}>
+        {TABS.map(t => (
+          <TouchableOpacity key={t.id}
+            style={[A.tabItem, tab === t.id && { borderBottomColor: C.navy, borderBottomWidth: 2 }]}
+            onPress={() => setTab(t.id)}>
+            <Text style={[A.tabItemTxt, tab === t.id && { color: C.navy, fontWeight: '700' }]}>{t.label}</Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      <ScrollView style={styles.content}>
-        {tab === 'dashboard' && (
+      <ScrollView style={{ flex: 1, padding: 16 }}>
+
+        {/* Home tab */}
+        {tab === 'home' && (
           <>
-            <Text style={styles.sectionTitle}>QUICK ACTIONS</Text>
-            {[
-              { icon:'📅', title:'Mark Attendance',    sub:'Record today\'s attendance',           color:'#1a7a6e', action:()=>setTab('attendance') },
-              { icon:'📚', title:'Academic Report',    sub:'Post grades and reports',              color:'#2a6fa8', action:()=>setShowAcademic(true) },
-              { icon:'📝', title:'Post Homework',      sub:'Assign homework to a class',           color:'#a855f7', action:()=>setShowHomework(true) },
-              { icon:'🏃', title:'Sports Assessment',  sub:'Record physical education results',    color:'#e8692a', action:()=>setShowSports(true) },
-              { icon:'📢', title:'Announcement',       sub:'Send message to all parents',          color:'#f59e0b', action:()=>setShowAnnounce(true) },
-              { icon:'🚨', title:'Alert Parent',       sub:'Send urgent alert to a parent',        color:'#ef4444', action:()=>setShowAlert(true) },
-              { icon:'👤', title:'Register Student',   sub:'Add a new student',                    color:'#059669', action:()=>setShowRegister(true) },
-            ].map((item, i) => (
-              <TouchableOpacity key={i} style={styles.actionCard} onPress={item.action}>
-                <View style={[styles.actionIcon, { backgroundColor: item.color+'22' }]}><Text style={{ fontSize:22 }}>{item.icon}</Text></View>
-                <View style={{ flex:1 }}><Text style={styles.actionTitle}>{item.title}</Text><Text style={styles.actionSub}>{item.sub}</Text></View>
-                <Text style={styles.actionArrow}>›</Text>
-              </TouchableOpacity>
-            ))}
+            <Text style={A.secHead}>QUICK ACTIONS</Text>
+            <ActionCard icon="📅" title="Mark Attendance"   sub="Record today's attendance"        color={C.green}  onPress={() => setTab('attendance')} />
+            <ActionCard icon="📚" title="Academic Report"   sub="Post grades and reports"           color={C.navy}   onPress={() => setShowAcademic(true)} />
+            <ActionCard icon="📝" title="Post Homework"     sub="Assign homework to a class"        color={C.purple} onPress={() => setShowHomework(true)} />
+            <ActionCard icon="🏃" title="Sports Assessment" sub="Record physical education results" color={C.amber}  onPress={() => setShowSports(true)} />
+            <ActionCard icon="📢" title="Announcement"      sub="Send message to all parents"       color={C.teal}   onPress={() => setShowAnnounce(true)} />
+            <ActionCard icon="🚨" title="Alert Parent"      sub="Send urgent alert to a parent"     color={C.red}    onPress={() => setShowAlert(true)} />
+            <ActionCard icon="👤" title="Register Student"  sub="Add a new student"                 color={C.green}  onPress={() => setShowRegister(true)} />
           </>
         )}
 
+        {/* Attendance tab */}
         {tab === 'attendance' && (
           <>
-            <Text style={styles.sectionTitle}>SELECT CLASS</Text>
-            {classes.length === 0 ? (
-              <View style={styles.emptyCard}><Text style={styles.emptyIcon}>📅</Text><Text style={styles.emptyText}>No classes set up yet.</Text></View>
-            ) : classes.map(cls => (
-              <TouchableOpacity key={cls.id} style={styles.classCard} onPress={() => { setSelectedClass(cls); loadStudents(cls.id); setShowAttendance(true); }}>
-                <View style={[styles.classDot, { backgroundColor: cls.color || T.primary }]} />
-                <View style={{ flex:1 }}><Text style={styles.className}>{cls.name}</Text><Text style={styles.classSub}>Teacher: {cls.teacher}</Text></View>
-                <Text style={styles.actionArrow}>›</Text>
-              </TouchableOpacity>
-            ))}
+            <Text style={A.secHead}>SELECT CLASS</Text>
+            {classes.length === 0
+              ? <View style={A.empty}><Text style={A.emptyTxt}>No classes set up yet.</Text></View>
+              : classes.map((cls: any) => (
+                  <TouchableOpacity key={cls.id} style={A.classCard}
+                    onPress={() => { setSelectedClass(cls); loadStudents(cls.id); setShowAttendance(true); }}>
+                    <View style={[A.classDot, { backgroundColor: cls.color || C.green }]} />
+                    <View style={{ flex: 1 }}>
+                      <Text style={A.className}>{cls.name}</Text>
+                      <Text style={A.classSub}>Tap to mark attendance</Text>
+                    </View>
+                    <Text style={{ color: C.greyMid, fontSize: 20 }}>›</Text>
+                  </TouchableOpacity>
+                ))
+            }
           </>
         )}
 
+        {/* Students tab */}
         {tab === 'students' && (
           <>
-            <Text style={styles.sectionTitle}>REGISTERED STUDENTS</Text>
-            <TouchableOpacity style={[styles.btn, { backgroundColor: T.primary, marginBottom:16 }]} onPress={() => setShowRegister(true)}>
-              <Text style={styles.btnText}>+ Register New Student</Text>
+            <Text style={A.secHead}>REGISTERED STUDENTS</Text>
+            <TouchableOpacity style={A.addStudentBtn} onPress={() => setShowRegister(true)}>
+              <Text style={A.addStudentBtnTxt}>+ Register New Student</Text>
             </TouchableOpacity>
-            {allStudents.length === 0 ? (
-              <View style={styles.emptyCard}><Text style={styles.emptyIcon}>👥</Text><Text style={styles.emptyText}>No students yet.</Text></View>
-            ) : allStudents.map(s => (
-              <View key={s.id} style={styles.classCard}>
-                <View style={[styles.attAvatar, { backgroundColor: s.avatar_color || T.primary, width:36, height:36, borderRadius:18 }]}><Text style={styles.attAvatarText}>{s.initials||s.name[0]}</Text></View>
-                <View style={{ flex:1, marginLeft:12 }}><Text style={styles.className}>{s.name}</Text><Text style={styles.classSub}>{s.class_name} · {s.student_code}</Text></View>
-              </View>
-            ))}
+            {allStudents.length === 0
+              ? <View style={A.empty}><Text style={A.emptyTxt}>No students yet.</Text></View>
+              : allStudents.map((s: any) => (
+                  <View key={s.id} style={A.studentCard}>
+                    <View style={[A.studentAvatar, { backgroundColor: C.navy }]}>
+                      <Text style={A.studentAvatarTxt}>{s.initials || s.name[0]}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={A.studentName}>{s.name}</Text>
+                      <Text style={A.studentSub}>{s.class_name} · {s.student_code}</Text>
+                    </View>
+                  </View>
+                ))
+            }
           </>
         )}
+
+        <View style={{ height: 48 }} />
       </ScrollView>
 
-      {/* Academic Report Modal */}
-      <Modal visible={showAcademic} animationType="slide">
-        <View style={[styles.container, { backgroundColor:'#0f1923' }]}>
-          <ScrollView contentContainerStyle={styles.modalScroll}>
-            <TouchableOpacity onPress={() => setShowAcademic(false)} style={styles.backBtn}><Text style={styles.backText}>← Cancel</Text></TouchableOpacity>
-            <Text style={styles.modalTitle}>📚 Academic Report</Text>
-            <Text style={styles.label}>Student *</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:16 }}>
-              {allStudents.map(s => (
-                <TouchableOpacity key={s.id} style={[styles.catBtn, acaStudent===s.id && { backgroundColor: T.primary }]} onPress={() => setAcaStudent(s.id)}>
-                  <Text style={[styles.catText, acaStudent===s.id && { color:'#fff' }]}>{s.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <Text style={styles.label}>Term</Text>
-            <View style={styles.toggleRow}>
-              {['Term 1','Term 2','Term 3'].map(t => (
-                <TouchableOpacity key={t} style={[styles.toggleBtn, acaTerm===t && { backgroundColor: T.primary }]} onPress={() => setAcaTerm(t)}>
-                  <Text style={[styles.toggleText, acaTerm===t && { color:'#fff' }]}>{t}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.label}>Subject *</Text>
-            <TextInput style={styles.input} placeholder="e.g. Mathematics" placeholderTextColor="#7a7066" value={acaSubject} onChangeText={setAcaSubject} />
-            <View style={{ flexDirection:'row', gap:10 }}>
-              <View style={{ flex:1 }}><Text style={styles.label}>Score</Text><TextInput style={styles.input} placeholder="e.g. 85" placeholderTextColor="#7a7066" value={acaScore} onChangeText={setAcaScore} keyboardType="numeric" /></View>
-              <View style={{ flex:1 }}><Text style={styles.label}>Grade</Text><TextInput style={styles.input} placeholder="e.g. A" placeholderTextColor="#7a7066" value={acaGrade} onChangeText={setAcaGrade} autoCapitalize="characters" /></View>
-            </View>
-            <Text style={styles.label}>Remarks</Text>
-            <TextInput style={[styles.input, { minHeight:80 }]} placeholder="Teacher's comments..." placeholderTextColor="#7a7066" value={acaRemarks} onChangeText={setAcaRemarks} multiline />
-            <TouchableOpacity style={[styles.btn, { backgroundColor:'#2a6fa8', marginTop:8 }]} onPress={saveAcademic} disabled={savingAca}>
-              {savingAca ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>✅ Save Report</Text>}
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </Modal>
+      {/* ── Modals ── */}
 
-      {/* Homework Modal */}
-      <Modal visible={showHomework} animationType="slide">
-        <View style={[styles.container, { backgroundColor:'#0f1923' }]}>
-          <ScrollView contentContainerStyle={styles.modalScroll}>
-            <TouchableOpacity onPress={() => setShowHomework(false)} style={styles.backBtn}><Text style={styles.backText}>← Cancel</Text></TouchableOpacity>
-            <Text style={styles.modalTitle}>📝 Post Homework</Text>
-            <Text style={styles.label}>Class (optional)</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:16 }}>
-              {classes.map(c => (
-                <TouchableOpacity key={c.id} style={[styles.catBtn, hwClass===c.id && { backgroundColor: T.primary }]} onPress={() => setHwClass(c.id)}>
-                  <Text style={[styles.catText, hwClass===c.id && { color:'#fff' }]}>{c.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <Text style={styles.label}>Subject *</Text>
-            <TextInput style={styles.input} placeholder="e.g. Mathematics" placeholderTextColor="#7a7066" value={hwSubject} onChangeText={setHwSubject} />
-            <Text style={styles.label}>Description</Text>
-            <TextInput style={[styles.input, { minHeight:80 }]} placeholder="What students need to do..." placeholderTextColor="#7a7066" value={hwDesc} onChangeText={setHwDesc} multiline />
-            <Text style={styles.label}>Due Date</Text>
-            <TextInput style={styles.input} placeholder="YYYY-MM-DD" placeholderTextColor="#7a7066" value={hwDue} onChangeText={setHwDue} />
-            <TouchableOpacity style={[styles.btn, { backgroundColor:'#a855f7', marginTop:8 }]} onPress={saveHomework} disabled={savingHw}>
-              {savingHw ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>✅ Post Homework</Text>}
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </Modal>
-
-      {/* Sports Modal */}
-      <Modal visible={showSports} animationType="slide">
-        <View style={[styles.container, { backgroundColor:'#0f1923' }]}>
-          <ScrollView contentContainerStyle={styles.modalScroll}>
-            <TouchableOpacity onPress={() => setShowSports(false)} style={styles.backBtn}><Text style={styles.backText}>← Cancel</Text></TouchableOpacity>
-            <Text style={styles.modalTitle}>🏃 Sports Assessment</Text>
-            <Text style={styles.label}>Student *</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:16 }}>
-              {allStudents.map(s => (
-                <TouchableOpacity key={s.id} style={[styles.catBtn, spStudent===s.id && { backgroundColor:'#e8692a' }]} onPress={() => setSpStudent(s.id)}>
-                  <Text style={[styles.catText, spStudent===s.id && { color:'#fff' }]}>{s.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <Text style={styles.label}>Sport</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:16 }}>
-              {SPORTS.map(s => (
-                <TouchableOpacity key={s.id} style={[styles.catBtn, spSport===s.id && { backgroundColor:'#e8692a' }]} onPress={() => setSpSport(s.id)}>
-                  <Text style={[styles.catText, spSport===s.id && { color:'#fff' }]}>{s.label}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <Text style={styles.label}>Term</Text>
-            <View style={styles.toggleRow}>
-              {['Term 1','Term 2','Term 3'].map(t => (
-                <TouchableOpacity key={t} style={[styles.toggleBtn, spTerm===t && { backgroundColor:'#e8692a' }]} onPress={() => setSpTerm(t)}>
-                  <Text style={[styles.toggleText, spTerm===t && { color:'#fff' }]}>{t}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.label}>Rating</Text>
-            <View style={styles.toggleRow}>
-              {['excellent','good','average','needswork'].map(r => (
-                <TouchableOpacity key={r} style={[styles.toggleBtn, spRating===r && { backgroundColor:'#e8692a' }]} onPress={() => setSpRating(r)}>
-                  <Text style={[styles.toggleText, spRating===r && { color:'#fff' }]}>{r}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-            <Text style={styles.label}>Notes</Text>
-            <TextInput style={[styles.input, { minHeight:80 }]} placeholder="Coach observations..." placeholderTextColor="#7a7066" value={spNotes} onChangeText={setSpNotes} multiline />
-            <TouchableOpacity style={[styles.btn, { backgroundColor:'#e8692a', marginTop:8 }]} onPress={saveSports} disabled={savingSp}>
-              {savingSp ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>✅ Save Assessment</Text>}
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </Modal>
-
-      {/* Announcement Modal */}
-      <Modal visible={showAnnounce} animationType="slide">
-        <View style={[styles.container, { backgroundColor:'#0f1923' }]}>
-          <ScrollView contentContainerStyle={styles.modalScroll}>
-            <TouchableOpacity onPress={() => setShowAnnounce(false)} style={styles.backBtn}><Text style={styles.backText}>← Cancel</Text></TouchableOpacity>
-            <Text style={styles.modalTitle}>📢 Announcement</Text>
-            <Text style={styles.label}>Message *</Text>
-            <TextInput style={[styles.input, { minHeight:120 }]} placeholder="Write your announcement..." placeholderTextColor="#7a7066" value={annText} onChangeText={setAnnText} multiline />
-            <TouchableOpacity style={[styles.btn, { backgroundColor:'#f59e0b', marginTop:8 }]} onPress={saveAnnouncement} disabled={savingAnn}>
-              {savingAnn ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>✅ Send Announcement</Text>}
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </Modal>
-
-      {/* Alert Modal */}
-      <Modal visible={showAlert} animationType="slide">
-        <View style={[styles.container, { backgroundColor:'#0f1923' }]}>
-          <ScrollView contentContainerStyle={styles.modalScroll}>
-            <TouchableOpacity onPress={() => setShowAlert(false)} style={styles.backBtn}><Text style={styles.backText}>← Cancel</Text></TouchableOpacity>
-            <Text style={styles.modalTitle}>🚨 Alert Parent</Text>
-            <Text style={styles.label}>Student *</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:16 }}>
-              {allStudents.map(s => (
-                <TouchableOpacity key={s.id} style={[styles.catBtn, alStudent===s.id && { backgroundColor:'#ef4444' }]} onPress={() => setAlStudent(s.id)}>
-                  <Text style={[styles.catText, alStudent===s.id && { color:'#fff' }]}>{s.name}</Text>
-                </TouchableOpacity>
-              ))}
-            </ScrollView>
-            <Text style={styles.label}>Alert Title *</Text>
-            <TextInput style={styles.input} placeholder="e.g. Disciplinary Issue" placeholderTextColor="#7a7066" value={alTitle} onChangeText={setAlTitle} />
-            <Text style={styles.label}>Description</Text>
-            <TextInput style={[styles.input, { minHeight:80 }]} placeholder="Details of the alert..." placeholderTextColor="#7a7066" value={alDesc} onChangeText={setAlDesc} multiline />
-            <TouchableOpacity style={[styles.btn, { backgroundColor:'#ef4444', marginTop:8 }]} onPress={saveAlert} disabled={savingAl}>
-              {savingAl ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>✅ Send Alert</Text>}
-            </TouchableOpacity>
-          </ScrollView>
-        </View>
-      </Modal>
-
-      {/* Register Student Modal */}
+      {/* Register Student */}
       <Modal visible={showRegister} animationType="slide">
-        <View style={[styles.container, { backgroundColor:'#0f1923' }]}>
-          <ScrollView contentContainerStyle={styles.modalScroll}>
-            <TouchableOpacity onPress={() => setShowRegister(false)} style={styles.backBtn}><Text style={styles.backText}>← Cancel</Text></TouchableOpacity>
-            <Text style={styles.modalTitle}>👤 Register Student</Text>
-            <Text style={styles.label}>Full Name *</Text>
-            <TextInput style={styles.input} placeholder="Student full name" placeholderTextColor="#7a7066" value={studentName} onChangeText={setStudentName} />
-            <Text style={styles.label}>Class *</Text>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom:16 }}>
-              {classes.map(cls => (
-                <TouchableOpacity key={cls.id} style={[styles.catBtn, studentClass===cls.id && { backgroundColor: T.primary }]} onPress={() => setStudentClass(cls.id)}>
-                  <Text style={[styles.catText, studentClass===cls.id && { color:'#fff' }]}>{cls.name}</Text>
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
+            <BackBtn onPress={() => setShowRegister(false)} label="← Cancel" />
+            <Text style={A.modalTitle}>Register Student</Text>
+            <Lbl text="FULL NAME *" />
+            <Field value={studentName} onChange={setStudentName} placeholder="e.g. John Fon" />
+            <Lbl text="CLASS *" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {classes.map((cls: any) => (
+                <TouchableOpacity key={cls.id}
+                  style={[A.pill, studentClass === cls.id && A.pillActive]}
+                  onPress={() => setStudentClass(cls.id)}>
+                  <Text style={[A.pillTxt, studentClass === cls.id && A.pillTxtActive]}>{cls.name}</Text>
                 </TouchableOpacity>
               ))}
             </ScrollView>
-            <Text style={styles.label}>Parent Name</Text>
-            <TextInput style={styles.input} placeholder="Parent full name" placeholderTextColor="#7a7066" value={parentName} onChangeText={setParentName} />
-            <Text style={styles.label}>Parent Phone</Text>
-            <TextInput style={styles.input} placeholder="+237 6XX XXX XXX" placeholderTextColor="#7a7066" value={parentPhone} onChangeText={setParentPhone} keyboardType="phone-pad" />
-            <TouchableOpacity style={[styles.btn, { backgroundColor: T.primary, marginTop:8 }]} onPress={registerStudent} disabled={registering}>
-              {registering ? <ActivityIndicator color="#fff" /> : <Text style={styles.btnText}>✅ Register Student</Text>}
+            <Lbl text="PARENT NAME" />
+            <Field value={parentName} onChange={setParentName} placeholder="Parent or guardian name" />
+            <Lbl text="PARENT PHONE" />
+            <Field value={parentPhone} onChange={setParentPhone} placeholder="+237..." keyboard="phone-pad" />
+            <TouchableOpacity style={A.signInBtn} onPress={registerStudent} disabled={registering}>
+              {registering ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Register Student</Text>}
             </TouchableOpacity>
           </ScrollView>
         </View>
       </Modal>
+
+      {/* Academic Report */}
+      <Modal visible={showAcademic} animationType="slide">
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
+            <BackBtn onPress={() => setShowAcademic(false)} label="← Cancel" />
+            <Text style={A.modalTitle}>Academic Report</Text>
+            <Lbl text="STUDENT *" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {allStudents.map((s: any) => (
+                <TouchableOpacity key={s.id}
+                  style={[A.pill, acaStudent === s.id && A.pillActive]}
+                  onPress={() => setAcaStudent(s.id)}>
+                  <Text style={[A.pillTxt, acaStudent === s.id && A.pillTxtActive]}>{s.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Lbl text="TERM" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {['Term 1', 'Term 2', 'Term 3'].map(t => (
+                <TouchableOpacity key={t}
+                  style={[A.pill, acaTerm === t && A.pillActive]}
+                  onPress={() => setAcaTerm(t)}>
+                  <Text style={[A.pillTxt, acaTerm === t && A.pillTxtActive]}>{t}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Lbl text="SUBJECT *" />
+            <Field value={acaSubject} onChange={setAcaSubject} placeholder="e.g. Mathematics" />
+            <Lbl text="SCORE" />
+            <Field value={acaScore} onChange={setAcaScore} placeholder="e.g. 85" keyboard="numeric" />
+            <Lbl text="GRADE" />
+            <Field value={acaGrade} onChange={setAcaGrade} placeholder="e.g. A" />
+            <Lbl text="REMARKS" />
+            <Field value={acaRemarks} onChange={setAcaRemarks} placeholder="Optional remarks" />
+            <TouchableOpacity style={A.signInBtn} onPress={saveAcademic} disabled={savingAca}>
+              {savingAca ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Save Report</Text>}
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Homework */}
+      <Modal visible={showHomework} animationType="slide">
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
+            <BackBtn onPress={() => setShowHomework(false)} label="← Cancel" />
+            <Text style={A.modalTitle}>Post Homework</Text>
+            <Lbl text="CLASS (optional)" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {classes.map((cls: any) => (
+                <TouchableOpacity key={cls.id}
+                  style={[A.pill, hwClass === cls.id && A.pillActive]}
+                  onPress={() => setHwClass(hwClass === cls.id ? '' : cls.id)}>
+                  <Text style={[A.pillTxt, hwClass === cls.id && A.pillTxtActive]}>{cls.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Lbl text="SUBJECT *" />
+            <Field value={hwSubject} onChange={setHwSubject} placeholder="e.g. Mathematics" />
+            <Lbl text="DESCRIPTION" />
+            <Field value={hwDesc} onChange={setHwDesc} placeholder="Homework details" />
+            <Lbl text="DUE DATE" />
+            <Field value={hwDue} onChange={setHwDue} placeholder="YYYY-MM-DD" />
+            <TouchableOpacity style={A.signInBtn} onPress={saveHomework} disabled={savingHw}>
+              {savingHw ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Post Homework</Text>}
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Sports */}
+      <Modal visible={showSports} animationType="slide">
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
+            <BackBtn onPress={() => setShowSports(false)} label="← Cancel" />
+            <Text style={A.modalTitle}>Sports Assessment</Text>
+            <Lbl text="STUDENT *" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {allStudents.map((s: any) => (
+                <TouchableOpacity key={s.id}
+                  style={[A.pill, spStudent === s.id && A.pillActive]}
+                  onPress={() => setSpStudent(s.id)}>
+                  <Text style={[A.pillTxt, spStudent === s.id && A.pillTxtActive]}>{s.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Lbl text="SPORT" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {SPORTS.map(s => (
+                <TouchableOpacity key={s.id}
+                  style={[A.pill, spSport === s.id && A.pillActive]}
+                  onPress={() => setSpSport(s.id)}>
+                  <Text style={[A.pillTxt, spSport === s.id && A.pillTxtActive]}>{s.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Lbl text="TERM" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {['Term 1', 'Term 2', 'Term 3'].map(t => (
+                <TouchableOpacity key={t}
+                  style={[A.pill, spTerm === t && A.pillActive]}
+                  onPress={() => setSpTerm(t)}>
+                  <Text style={[A.pillTxt, spTerm === t && A.pillTxtActive]}>{t}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Lbl text="RATING" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {['excellent', 'good', 'average', 'needs_work'].map(r => (
+                <TouchableOpacity key={r}
+                  style={[A.pill, spRating === r && A.pillActive]}
+                  onPress={() => setSpRating(r)}>
+                  <Text style={[A.pillTxt, spRating === r && A.pillTxtActive]}>{r.replace('_', ' ')}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Lbl text="NOTES" />
+            <Field value={spNotes} onChange={setSpNotes} placeholder="Optional notes" />
+            <TouchableOpacity style={A.signInBtn} onPress={saveSports} disabled={savingSp}>
+              {savingSp ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Save Assessment</Text>}
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Announcement */}
+      <Modal visible={showAnnounce} animationType="slide">
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
+            <BackBtn onPress={() => setShowAnnounce(false)} label="← Cancel" />
+            <Text style={A.modalTitle}>Send Announcement</Text>
+            <Lbl text="MESSAGE" />
+            <Field value={annText} onChange={setAnnText} placeholder="Type your announcement here..." />
+            <TouchableOpacity style={A.signInBtn} onPress={saveAnnouncement} disabled={savingAnn}>
+              {savingAnn ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Send Announcement</Text>}
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Alert */}
+      <Modal visible={showAlert} animationType="slide">
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
+            <BackBtn onPress={() => setShowAlert(false)} label="← Cancel" />
+            <Text style={A.modalTitle}>Alert Parent</Text>
+            <Lbl text="STUDENT *" />
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
+              {allStudents.map((s: any) => (
+                <TouchableOpacity key={s.id}
+                  style={[A.pill, alStudent === s.id && A.pillActive]}
+                  onPress={() => setAlStudent(s.id)}>
+                  <Text style={[A.pillTxt, alStudent === s.id && A.pillTxtActive]}>{s.name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+            <Lbl text="ALERT TITLE *" />
+            <Field value={alTitle} onChange={setAlTitle} placeholder="e.g. Missing homework" />
+            <Lbl text="DESCRIPTION" />
+            <Field value={alDesc} onChange={setAlDesc} placeholder="Optional details" />
+            <TouchableOpacity style={[A.signInBtn, { backgroundColor: C.red }]} onPress={saveAlert} disabled={savingAl}>
+              {savingAl ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Send Alert</Text>}
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container:      { flex:1 },
-  loginScroll:    { padding:24, paddingTop:80 },
-  appTitle:       { fontSize:40, fontWeight:'800', color:'#fff', marginBottom:24 },
-  badge:          { borderRadius:14, padding:16, marginBottom:24 },
-  badgeTitle:     { fontSize:18, fontWeight:'700', color:'#fff' },
-  badgeSub:       { fontSize:12, color:'rgba(255,255,255,0.7)', marginTop:3 },
-  label:          { fontSize:11, fontWeight:'700', color:'#7a8fa8', textTransform:'uppercase', letterSpacing:0.8, marginBottom:6 },
-  input:          { backgroundColor:'rgba(255,255,255,0.08)', borderRadius:10, padding:14, color:'#fff', fontSize:15, marginBottom:16, borderWidth:1, borderColor:'rgba(255,255,255,0.1)' },
-  btn:            { borderRadius:12, padding:16, alignItems:'center', marginBottom:8 },
-  btnText:        { color:'#fff', fontSize:16, fontWeight:'700' },
-  header:         { padding:20, paddingTop:60, flexDirection:'row', justifyContent:'space-between', alignItems:'center' },
-  headerTitle:    { fontSize:18, fontWeight:'800', color:'#fff' },
-  headerSub:      { fontSize:12, color:'rgba(255,255,255,0.5)', marginTop:2 },
-  signOutBtn:     { backgroundColor:'rgba(255,255,255,0.1)', borderRadius:8, padding:8, paddingHorizontal:12 },
-  signOutText:    { color:'rgba(255,255,255,0.6)', fontSize:13 },
-  statsRow:       { flexDirection:'row', gap:10, padding:16 },
-  statCard:       { flex:1, backgroundColor:'rgba(255,255,255,0.07)', borderRadius:12, padding:14, alignItems:'center' },
-  statNum:        { fontSize:26, fontWeight:'800', color:'#fff' },
-  statLabel:      { fontSize:11, color:'rgba(255,255,255,0.5)', marginTop:2 },
-  tabRow:         { flexDirection:'row', backgroundColor:'#fff', borderBottomWidth:1, borderBottomColor:'#ddd8cc' },
-  tabBtn:         { flex:1, padding:14, alignItems:'center' },
-  tabText:        { fontSize:13, color:'#7a7066', fontWeight:'600' },
-  content:        { flex:1, padding:16 },
-  sectionTitle:   { fontSize:10, fontWeight:'700', color:'#7a7066', letterSpacing:1, textTransform:'uppercase', marginBottom:12, marginTop:4 },
-  actionCard:     { flexDirection:'row', alignItems:'center', backgroundColor:'#fff', borderRadius:14, padding:16, marginBottom:10, borderWidth:1.5, borderColor:'#ddd8cc' },
-  actionIcon:     { width:46, height:46, borderRadius:12, alignItems:'center', justifyContent:'center', marginRight:14 },
-  actionTitle:    { fontSize:15, fontWeight:'700', color:'#0f1923', marginBottom:2 },
-  actionSub:      { fontSize:12, color:'#7a7066' },
-  actionArrow:    { fontSize:22, color:'#ddd8cc' },
-  classCard:      { flexDirection:'row', alignItems:'center', backgroundColor:'#fff', borderRadius:14, padding:16, marginBottom:10, borderWidth:1.5, borderColor:'#ddd8cc' },
-  classDot:       { width:12, height:12, borderRadius:6, marginRight:14 },
-  className:      { fontSize:15, fontWeight:'700', color:'#0f1923' },
-  classSub:       { fontSize:12, color:'#7a7066', marginTop:2 },
-  emptyCard:      { alignItems:'center', padding:40, backgroundColor:'#fff', borderRadius:16, borderWidth:1.5, borderColor:'#ddd8cc' },
-  emptyIcon:      { fontSize:40, marginBottom:12 },
-  emptyText:      { fontSize:14, color:'#7a7066', textAlign:'center' },
-  attHeader:      { padding:20, paddingTop:60 },
-  attBack:        { color:'rgba(255,255,255,0.7)', fontSize:14, marginBottom:8 },
-  attTitle:       { fontSize:20, fontWeight:'800', color:'#fff' },
-  attDate:        { fontSize:12, color:'rgba(255,255,255,0.6)', marginTop:4 },
-  attContent:     { flex:1, padding:16 },
-  attCard:        { flexDirection:'row', alignItems:'center', backgroundColor:'#fff', borderRadius:12, padding:12, marginBottom:8, borderWidth:1, borderColor:'#ddd8cc' },
-  attAvatar:      { width:40, height:40, borderRadius:20, alignItems:'center', justifyContent:'center', marginRight:12 },
-  attAvatarText:  { color:'#fff', fontWeight:'700', fontSize:14 },
-  attName:        { fontSize:14, fontWeight:'700', color:'#0f1923' },
-  attCode:        { fontSize:11, color:'#7a7066' },
-  attBtns:        { flexDirection:'row', gap:6 },
-  attBtn:         { width:30, height:30, borderRadius:8, backgroundColor:'#f0ebe0', alignItems:'center', justifyContent:'center' },
-  attBtnText:     { fontSize:11, fontWeight:'700', color:'#7a7066' },
-  attFooter:      { backgroundColor:'#fff', borderTopWidth:1, borderTopColor:'#ddd8cc' },
-  modalScroll:    { padding:24, paddingTop:60, paddingBottom:40 },
-  modalTitle:     { fontSize:24, fontWeight:'800', color:'#fff', marginBottom:24 },
-  backBtn:        { marginBottom:16 },
-  backText:       { color:'rgba(255,255,255,0.5)', fontSize:14 },
-  toggleRow:      { flexDirection:'row', gap:8, marginBottom:16, flexWrap:'wrap' },
-  toggleBtn:      { flex:1, padding:10, borderRadius:10, backgroundColor:'rgba(255,255,255,0.08)', alignItems:'center', minWidth:70 },
-  toggleText:     { fontSize:12, color:'rgba(255,255,255,0.5)', fontWeight:'600' },
-  catBtn:         { paddingHorizontal:14, paddingVertical:8, borderRadius:20, backgroundColor:'rgba(255,255,255,0.08)', marginRight:8 },
-  catText:        { fontSize:13, color:'rgba(255,255,255,0.5)', fontWeight:'600' },
+const A = StyleSheet.create({
+  fill:              { flex: 1 },
+  pad:               { padding: 24, paddingTop: 60, paddingBottom: 48 },
+  modalPad:          { padding: 24, paddingTop: 60, paddingBottom: 48 },
+  backBtn:           { alignSelf: 'flex-start', backgroundColor: C.white, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: C.border, marginBottom: 24 },
+  backBtnTxt:        { color: C.greyDark, fontSize: 13, fontWeight: '600' },
+  loginTop:          { alignItems: 'center', marginBottom: 28, paddingTop: 8 },
+  loginIcon:         { width: 64, height: 64, borderRadius: 20, backgroundColor: C.navyLight, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  loginH1:           { fontSize: 26, fontWeight: '800', color: C.navy, marginBottom: 6 },
+  loginH2:           { fontSize: 13, color: C.grey, textAlign: 'center' },
+  lbl:               { fontSize: 10, fontWeight: '700', color: C.grey, letterSpacing: 1.2, marginBottom: 8 },
+  fieldWrap:         { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 12, borderWidth: 1.5, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 20 },
+  fieldTxt:          { color: C.black, fontSize: 15, flex: 1 },
+  signInBtn:         { backgroundColor: C.navy, borderRadius: 14, padding: 17, alignItems: 'center' },
+  signInBtnTxt:      { color: C.white, fontSize: 16, fontWeight: '700' },
+  dashHeader:        { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: 16, paddingTop: 52, borderBottomWidth: 1, borderBottomColor: C.border },
+  dashHeaderSchool:  { fontSize: 16, fontWeight: '800', color: C.navy, marginBottom: 2 },
+  dashHeaderWelcome: { fontSize: 12, color: C.grey },
+  signOutBtn:        { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
+  signOutBtnTxt:     { color: C.grey, fontSize: 12, fontWeight: '600' },
+  statsStrip:        { flexDirection: 'row', backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: C.border },
+  statItem:          { flex: 1, alignItems: 'center', paddingVertical: 14 },
+  statNum:           { fontSize: 22, fontWeight: '900', color: C.navy, marginBottom: 2 },
+  statLbl:           { fontSize: 10, color: C.grey, fontWeight: '600' },
+  tabBar:            { flexDirection: 'row', backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: C.border },
+  tabItem:           { flex: 1, alignItems: 'center', paddingVertical: 12, borderBottomWidth: 2, borderBottomColor: 'transparent' },
+  tabItemTxt:        { fontSize: 12, color: C.grey, fontWeight: '600' },
+  secHead:           { fontSize: 10, fontWeight: '700', color: C.grey, letterSpacing: 1.2, marginBottom: 14, marginTop: 4 },
+  actionCard:        { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border, borderLeftWidth: 3 },
+  actionIcon:        { width: 46, height: 46, borderRadius: 13, alignItems: 'center', justifyContent: 'center', marginRight: 14 },
+  actionTitle:       { fontSize: 15, fontWeight: '700', color: C.navy, marginBottom: 2 },
+  actionSub:         { fontSize: 12, color: C.grey },
+  classCard:         { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border },
+  classDot:          { width: 12, height: 12, borderRadius: 6, marginRight: 14 },
+  className:         { fontSize: 15, fontWeight: '700', color: C.navy, marginBottom: 2 },
+  classSub:          { fontSize: 12, color: C.grey },
+  addStudentBtn:     { backgroundColor: C.greenLight, borderRadius: 12, padding: 14, alignItems: 'center', marginBottom: 16, borderWidth: 1, borderColor: C.green + '44' },
+  addStudentBtnTxt:  { color: C.green, fontSize: 14, fontWeight: '700' },
+  studentCard:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: C.border },
+  studentAvatar:     { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  studentAvatarTxt:  { color: C.white, fontWeight: '800', fontSize: 13 },
+  studentName:       { fontSize: 14, fontWeight: '700', color: C.navy, marginBottom: 2 },
+  studentSub:        { fontSize: 11, color: C.grey },
+  attCard:           { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: C.border },
+  attAvatar:         { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
+  attAvatarTxt:      { color: C.white, fontWeight: '800', fontSize: 13 },
+  attName:           { fontSize: 14, fontWeight: '700', color: C.navy, marginBottom: 2 },
+  attCode:           { fontSize: 11, color: C.grey },
+  attBtns:           { flexDirection: 'row', gap: 6 },
+  attBtn:            { width: 32, height: 32, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1.5, borderColor: C.border, backgroundColor: C.canvas },
+  attBtnTxt:         { fontSize: 11, fontWeight: '700', color: C.grey },
+  saveBar:           { backgroundColor: C.white, padding: 16, borderTopWidth: 1, borderTopColor: C.border },
+  saveBtn:           { backgroundColor: C.green, borderRadius: 14, padding: 16, alignItems: 'center' },
+  saveBtnTxt:        { color: C.white, fontSize: 15, fontWeight: '700' },
+  screenHeader:      { flexDirection: 'row', alignItems: 'flex-start', backgroundColor: C.white, padding: 16, paddingTop: 52, borderBottomWidth: 1, borderBottomColor: C.border, gap: 12 },
+  screenHeaderTitle: { fontSize: 16, fontWeight: '800', color: C.navy, marginBottom: 2 },
+  screenHeaderSub:   { fontSize: 12, color: C.grey },
+  modalTitle:        { fontSize: 24, fontWeight: '800', color: C.navy, marginBottom: 24 },
+  pill:              { paddingHorizontal: 14, paddingVertical: 8, borderRadius: 20, backgroundColor: C.white, borderWidth: 1.5, borderColor: C.border, marginRight: 8 },
+  pillActive:        { backgroundColor: C.navy, borderColor: C.navy },
+  pillTxt:           { fontSize: 13, color: C.grey, fontWeight: '600' },
+  pillTxtActive:     { color: C.white },
+  empty:             { alignItems: 'center', padding: 40, backgroundColor: C.white, borderRadius: 14, borderWidth: 1, borderColor: C.border },
+  emptyTxt:          { color: C.grey, fontSize: 13 },
+  blue:              C.blue,
 });
