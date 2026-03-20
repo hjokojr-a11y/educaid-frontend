@@ -94,8 +94,8 @@ function FadeIn({ children, delay = 0 }: any) {
   const translateY = useState(new Animated.Value(20))[0];
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(opacity,    { toValue: 1, duration: 650, delay, useNativeDriver: true }),
-      Animated.timing(translateY, { toValue: 0, duration: 650, delay, useNativeDriver: true }),
+      Animated.timing(opacity,    { toValue: 1, duration: 650, delay, useNativeDriver: false }),
+      Animated.timing(translateY, { toValue: 0, duration: 650, delay, useNativeDriver: false }),
     ]).start();
   }, []);
   return <Animated.View style={{ opacity, transform: [{ translateY }] }}>{children}</Animated.View>;
