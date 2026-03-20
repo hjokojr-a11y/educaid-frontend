@@ -280,7 +280,7 @@ export default function HomeScreen() {
               <Text style={{ fontSize:28 }}>🏫</Text>
             </View>
             <View style={{ flex:1 }}>
-              <Text style={S.roleCardTitle}>School Admin / Staff</Text>
+              <Text style={S.roleCardTitle}>School Admin</Text>
               <Text style={S.roleCardSub}>Manage attendance, grades & more</Text>
             </View>
             <Text style={{ color:C.greyMid, fontSize:22 }}>›</Text>
