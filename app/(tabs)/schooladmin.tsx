@@ -130,6 +130,10 @@ export default function SchoolAdminScreen() {
   const [studentEmail, setStudentEmail] = useState('');
   const [showRequests, setShowRequests] = useState(false);
   const [requests, setRequests] = useState<any[]>([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
+  const [studentEmail, setStudentEmail] = useState('');
+  const [showRequests, setShowRequests] = useState(false);
+  const [requests, setRequests] = useState<any[]>([]);
 
   const [attendance, setAttendance] = useState<any>({});
   const [savingAtt,  setSavingAtt]  = useState(false);
@@ -204,6 +208,22 @@ export default function SchoolAdminScreen() {
       const schoolRequests = (d.students || []).filter((s: any) => s.school_id === user.school.id || s.school_name === user.school.name);
       setRequests(schoolRequests);
     } catch {}
+  }
+
+  async function loadRequests(t?: string) {
+    setLoadingRequests(true);
+    try {
+      const res = await fetch(`${API_URL}/schools/${user?.school?.id}/students/pending`, {
+        headers: { Authorization: `Bearer ${t || token}` }
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setRequests(d.students || []);
+      } else {
+        setRequests([]);
+      }
+    } catch { setRequests([]); }
+    setLoadingRequests(false);
   }
 
   const SPORTS = [
@@ -514,6 +534,7 @@ export default function SchoolAdminScreen() {
             <ActionCard icon="📢" title="Announcement"      sub="Send message to all parents"       color={C.teal}   onPress={() => setShowAnnounce(true)} />
             <ActionCard icon="🚨" title="Alert Parent"      sub="Send urgent alert to a parent"     color={C.red}    onPress={() => setShowAlert(true)} />
             <ActionCard icon="👤" title="Register Student"  sub="Add a new student"                 color={C.green}  onPress={() => setShowRegister(true)} />
+            <ActionCard icon="📋" title="Student Requests"  sub="Track pending & approved students"  color={C.teal}   onPress={() => { loadRequests(); setShowRequests(true); }} />
             <ActionCard icon="📋" title="Student Requests"   sub="View pending & approved requests"    color={C.teal}   onPress={() => { loadRequests(); setShowRequests(true); }} />
           </>
         )}
@@ -586,17 +607,19 @@ export default function SchoolAdminScreen() {
             {/* Photo Upload */}
             <Lbl text="STUDENT PHOTO" />
             <TouchableOpacity style={A.photoBox} onPress={() => {
-              const input = document.createElement('input');
-              input.type = 'file'; input.accept = 'image/*';
-              input.onchange = (e: any) => {
-                const file = e.target.files[0];
-                if (file) {
-                  const reader = new FileReader();
-                  reader.onload = (r: any) => setStudentPhoto(r.target.result);
-                  reader.readAsDataURL(file);
-                }
-              };
-              input.click();
+              try {
+                const input = document.createElement('input');
+                input.type = 'file'; input.accept = 'image/*';
+                input.onchange = (e: any) => {
+                  const file = e?.target?.files?.[0];
+                  if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (r: any) => setStudentPhoto(r?.target?.result || '');
+                    reader.readAsDataURL(file);
+                  }
+                };
+                input.click();
+              } catch {}
             }}>
               {studentPhoto
                 ? <Text style={{ fontSize: 40 }}>✅</Text>
@@ -646,6 +669,8 @@ export default function SchoolAdminScreen() {
               ))}
             </ScrollView>
 
+            <Lbl text="STUDENT / PARENT EMAIL" />
+            <Field value={studentEmail} onChange={setStudentEmail} placeholder="student@email.com or parent@email.com" keyboard="email-address" />
             <Lbl text="PARENT / GUARDIAN NAME" />
             <Field value={parentName} onChange={setParentName} placeholder="Parent or guardian name" />
             <Lbl text="PARENT PHONE" />
@@ -795,6 +820,49 @@ export default function SchoolAdminScreen() {
             <TouchableOpacity style={A.signInBtn} onPress={saveAnnouncement} disabled={savingAnn}>
               {savingAnn ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Send Announcement</Text>}
             </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
+      {/* Student Requests */}
+      <Modal visible={showRequests} animationType="slide">
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <View style={A.screenHeader}>
+            <BackBtn onPress={() => setShowRequests(false)} label="← Back" />
+            <View style={{ flex: 1 }}>
+              <Text style={A.screenHeaderTitle}>Student Requests</Text>
+              <Text style={A.screenHeaderSub}>Track registration status</Text>
+            </View>
+            <TouchableOpacity onPress={() => loadRequests()} style={{ padding: 8 }}>
+              <Text style={{ color: C.navy, fontSize: 13, fontWeight: '700' }}>↺ Refresh</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={{ flex: 1, padding: 16 }}>
+            {loadingRequests
+              ? <ActivityIndicator color={C.navy} size="large" style={{ marginTop: 40 }} />
+              : requests.length === 0
+                ? <View style={A.empty}>
+                    <Text style={{ fontSize: 32, marginBottom: 12 }}>📋</Text>
+                    <Text style={A.emptyTxt}>No student requests yet.</Text>
+                  </View>
+                : requests.map((r: any) => (
+                    <View key={r.id} style={[A.studentCard, { borderLeftWidth: 3, borderLeftColor: C.amber }]}>
+                      <View style={[A.studentAvatar, { backgroundColor: C.amber }]}>
+                        <Text style={A.studentAvatarTxt}>{r.name?.split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase()}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={A.studentName}>{r.name}</Text>
+                        <Text style={A.studentSub}>{r.class_name} · {r.school_name}</Text>
+                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
+                          <View style={{ backgroundColor: C.amber + '20', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: C.amber + '44' }}>
+                            <Text style={{ color: C.amber, fontSize: 10, fontWeight: '700' }}>⏳ PENDING APPROVAL</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  ))
+            }
+            <View style={{ height: 48 }} />
           </ScrollView>
         </View>
       </Modal>
