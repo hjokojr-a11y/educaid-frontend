@@ -165,7 +165,7 @@ export default function SuperAdminScreen() {
     return (
       <View style={[P.fill, { backgroundColor: C.canvas }]}>
         <ScrollView contentContainerStyle={P.pad} keyboardShouldPersistTaps="handled">
-          <BackBtn onPress={() => router.back()} label="← Home" />
+          <BackBtn onPress={() => router.push('/')} label="← Home" />
           <View style={P.loginTop}>
             <View style={P.loginIcon}><Text style={{ fontSize: 28 }}>👑</Text></View>
             <Text style={P.loginH1}>Super Admin</Text>
@@ -189,7 +189,7 @@ export default function SuperAdminScreen() {
 
       {/* Header */}
       <View style={P.dashHeader}>
-        <TouchableOpacity onPress={() => router.back()} style={P.headerBack}>
+        <TouchableOpacity onPress={() => { try { localStorage.setItem('super_session', JSON.stringify({ token })); } catch {} router.push('/'); }} style={P.headerBack}>
           <Text style={P.headerBackTxt}>←</Text>
         </TouchableOpacity>
         <View style={{ flex: 1 }}>

@@ -26,6 +26,45 @@ function Field({ value, onChange, placeholder, secure, keyboard }: any) {
         placeholder={placeholder} placeholderTextColor={C.greyMid}
         secureTextEntry={secure} autoCapitalize="none"
         keyboardType={keyboard || 'default'} />
+
+      {/* Student Requests Modal */}
+      <Modal visible={showRequests} animationType="slide">
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <View style={A.screenHeader}>
+            <BackBtn onPress={() => setShowRequests(false)} label="← Back" />
+            <View style={{ flex: 1 }}>
+              <Text style={A.screenHeaderTitle}>Student Requests</Text>
+              <Text style={A.screenHeaderSub}>Pending & approved registrations</Text>
+            </View>
+          </View>
+          <ScrollView style={{ flex: 1, padding: 16 }}>
+            {requests.length === 0
+              ? <View style={A.empty}>
+                  <Text style={{ fontSize: 32, marginBottom: 12 }}>📋</Text>
+                  <Text style={A.emptyTxt}>No pending requests.</Text>
+                </View>
+              : requests.map((r: any) => (
+                  <View key={r.id} style={[A.studentCard, { borderLeftWidth: 3, borderLeftColor: C.amber }]}>
+                    <View style={[A.studentAvatar, { backgroundColor: C.amber }]}>
+                      <Text style={A.studentAvatarTxt}>{r.name?.split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase()}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={A.studentName}>{r.name}</Text>
+                      <Text style={A.studentSub}>{r.class_name} · {r.school_name}</Text>
+                      <View style={{ flexDirection: 'row', marginTop: 4 }}>
+                        <View style={{ backgroundColor: C.amber + '20', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: C.amber + '40' }}>
+                          <Text style={{ color: C.amber, fontSize: 10, fontWeight: '700' }}>⏳ PENDING APPROVAL</Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                ))
+            }
+            <View style={{ height: 48 }} />
+          </ScrollView>
+        </View>
+      </Modal>
+
     </View>
   );
 }
@@ -88,6 +127,9 @@ export default function SchoolAdminScreen() {
   const [studentSex, setStudentSex] = useState('');
   const [studentReligion, setStudentReligion] = useState('');
   const [studentPhoto, setStudentPhoto] = useState('');
+  const [studentEmail, setStudentEmail] = useState('');
+  const [showRequests, setShowRequests] = useState(false);
+  const [requests, setRequests] = useState<any[]>([]);
 
   const [attendance, setAttendance] = useState<any>({});
   const [savingAtt,  setSavingAtt]  = useState(false);
@@ -146,6 +188,22 @@ export default function SchoolAdminScreen() {
         } else showAlert('Error', 'Failed to delete student');
       } catch { showAlert('Error', 'Failed to delete student'); }
     }
+  }
+
+  async function loadRequests() {
+    try {
+      const res = await fetch(`${API_URL}/schools/${user.school.id}/students?pending=true`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      // Get all students including inactive (pending)
+      const res2 = await fetch(`${API_URL}/auth/super/pending-students`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const d = await res2.json();
+      // Filter to only this school
+      const schoolRequests = (d.students || []).filter((s: any) => s.school_id === user.school.id || s.school_name === user.school.name);
+      setRequests(schoolRequests);
+    } catch {}
   }
 
   const SPORTS = [
@@ -215,17 +273,17 @@ export default function SchoolAdminScreen() {
         body: JSON.stringify({ 
           name: fullName, 
           firstName: studentFirstName, middleName: studentMiddleName, lastName: studentLastName,
-          classId: studentClass, parentName, parentPhone,
+          classId: studentClass, parentName, parentPhone, studentEmail,
           dateOfBirth: studentDOB, sex: studentSex, religion: studentReligion, photo: studentPhoto
         }),
       });
       const data = await res.json();
       if (!res.ok) { showAlert('Error', data.error || 'Failed'); setRegistering(false); return; }
-      showAlert('Registered!', fullName + ' is pending Super Admin approval.');
+      showAlert('Request Sent!', fullName + ' registration request sent successfully! Awaiting Super Admin approval.');
       setRegistering(false); setShowRegister(false);
       setStudentFirstName(''); setStudentMiddleName(''); setStudentLastName('');
       setStudentName(''); setStudentClass(''); setParentName(''); setParentPhone('');
-      setStudentDOB(''); setStudentSex(''); setStudentReligion(''); setStudentPhoto('');
+      setStudentDOB(''); setStudentSex(''); setStudentReligion(''); setStudentPhoto(''); setStudentEmail('');
     } catch { showAlert('Error', 'Failed'); setRegistering(false); }
   }
 
@@ -321,7 +379,7 @@ export default function SchoolAdminScreen() {
     return (
       <View style={[A.fill, { backgroundColor: C.canvas }]}>
         <ScrollView contentContainerStyle={A.pad} keyboardShouldPersistTaps="handled">
-          <BackBtn onPress={() => router.back()} label='← Home' />
+          <BackBtn onPress={() => router.push('/')} label='← Home' />
           <View style={A.loginTop}>
             <View style={A.loginIcon}><Text style={{ fontSize: 28 }}>🏫</Text></View>
             <Text style={A.loginH1}>School Admin</Text>
@@ -403,7 +461,7 @@ export default function SchoolAdminScreen() {
 
       {/* Header */}
       <View style={A.dashHeader}>
-        <TouchableOpacity onPress={() => router.back()} style={A.headerBack}>
+        <TouchableOpacity onPress={() => { try { localStorage.setItem('admin_session', JSON.stringify({ token, user })); } catch {} router.push('/'); }} style={A.headerBack}>
           <Text style={A.headerBackTxt}>←</Text>
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
@@ -456,6 +514,7 @@ export default function SchoolAdminScreen() {
             <ActionCard icon="📢" title="Announcement"      sub="Send message to all parents"       color={C.teal}   onPress={() => setShowAnnounce(true)} />
             <ActionCard icon="🚨" title="Alert Parent"      sub="Send urgent alert to a parent"     color={C.red}    onPress={() => setShowAlert(true)} />
             <ActionCard icon="👤" title="Register Student"  sub="Add a new student"                 color={C.green}  onPress={() => setShowRegister(true)} />
+            <ActionCard icon="📋" title="Student Requests"   sub="View pending & approved requests"    color={C.teal}   onPress={() => { loadRequests(); setShowRequests(true); }} />
           </>
         )}
 
@@ -521,7 +580,7 @@ export default function SchoolAdminScreen() {
       <Modal visible={showRegister} animationType="slide">
         <View style={[A.fill, { backgroundColor: C.canvas }]}>
           <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
-            <BackBtn onPress={() => setShowRegister(false)} label="← Cancel" />
+            <BackBtn onPress={() => setShowRegister(false)} label="← Back" />
             <Text style={A.modalTitle}>Register Student</Text>
 
             {/* Photo Upload */}
@@ -591,6 +650,8 @@ export default function SchoolAdminScreen() {
             <Field value={parentName} onChange={setParentName} placeholder="Parent or guardian name" />
             <Lbl text="PARENT PHONE" />
             <Field value={parentPhone} onChange={setParentPhone} placeholder="+237..." keyboard="phone-pad" />
+            <Lbl text="STUDENT / PARENT EMAIL (credentials sent here)" />
+            <Field value={studentEmail} onChange={setStudentEmail} placeholder="email@example.com" keyboard="email-address" />
             <TouchableOpacity style={A.signInBtn} onPress={registerStudent} disabled={registering}>
               {registering ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Register Student</Text>}
             </TouchableOpacity>
@@ -602,7 +663,7 @@ export default function SchoolAdminScreen() {
       <Modal visible={showAcademic} animationType="slide">
         <View style={[A.fill, { backgroundColor: C.canvas }]}>
           <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
-            <BackBtn onPress={() => setShowAcademic(false)} label="← Cancel" />
+            <BackBtn onPress={() => setShowAcademic(false)} label="← Back" />
             <Text style={A.modalTitle}>Academic Report</Text>
             <Lbl text="STUDENT *" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
@@ -643,7 +704,7 @@ export default function SchoolAdminScreen() {
       <Modal visible={showHomework} animationType="slide">
         <View style={[A.fill, { backgroundColor: C.canvas }]}>
           <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
-            <BackBtn onPress={() => setShowHomework(false)} label="← Cancel" />
+            <BackBtn onPress={() => setShowHomework(false)} label="← Back" />
             <Text style={A.modalTitle}>Post Homework</Text>
             <Lbl text="CLASS (optional)" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
@@ -672,7 +733,7 @@ export default function SchoolAdminScreen() {
       <Modal visible={showSports} animationType="slide">
         <View style={[A.fill, { backgroundColor: C.canvas }]}>
           <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
-            <BackBtn onPress={() => setShowSports(false)} label="← Cancel" />
+            <BackBtn onPress={() => setShowSports(false)} label="← Back" />
             <Text style={A.modalTitle}>Sports Assessment</Text>
             <Lbl text="STUDENT *" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
@@ -727,7 +788,7 @@ export default function SchoolAdminScreen() {
       <Modal visible={showAnnounce} animationType="slide">
         <View style={[A.fill, { backgroundColor: C.canvas }]}>
           <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
-            <BackBtn onPress={() => setShowAnnounce(false)} label="← Cancel" />
+            <BackBtn onPress={() => setShowAnnounce(false)} label="← Back" />
             <Text style={A.modalTitle}>Send Announcement</Text>
             <Lbl text="MESSAGE" />
             <Field value={annText} onChange={setAnnText} placeholder="Type your announcement here..." />
@@ -742,7 +803,7 @@ export default function SchoolAdminScreen() {
       <Modal visible={showAlert} animationType="slide">
         <View style={[A.fill, { backgroundColor: C.canvas }]}>
           <ScrollView contentContainerStyle={A.modalPad} keyboardShouldPersistTaps="handled">
-            <BackBtn onPress={() => setShowAlert(false)} label="← Cancel" />
+            <BackBtn onPress={() => setShowAlert(false)} label="← Back" />
             <Text style={A.modalTitle}>Alert Parent</Text>
             <Lbl text="STUDENT *" />
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginBottom: 20 }}>
@@ -761,6 +822,45 @@ export default function SchoolAdminScreen() {
             <TouchableOpacity style={[A.signInBtn, { backgroundColor: C.red }]} onPress={saveAlert} disabled={savingAl}>
               {savingAl ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Send Alert</Text>}
             </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
+
+
+      {/* Student Requests Modal */}
+      <Modal visible={showRequests} animationType="slide">
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <View style={A.screenHeader}>
+            <BackBtn onPress={() => setShowRequests(false)} label="← Back" />
+            <View style={{ flex: 1 }}>
+              <Text style={A.screenHeaderTitle}>Student Requests</Text>
+              <Text style={A.screenHeaderSub}>Pending & approved registrations</Text>
+            </View>
+          </View>
+          <ScrollView style={{ flex: 1, padding: 16 }}>
+            {requests.length === 0
+              ? <View style={A.empty}>
+                  <Text style={{ fontSize: 32, marginBottom: 12 }}>📋</Text>
+                  <Text style={A.emptyTxt}>No pending requests.</Text>
+                </View>
+              : requests.map((r: any) => (
+                  <View key={r.id} style={[A.studentCard, { borderLeftWidth: 3, borderLeftColor: C.amber }]}>
+                    <View style={[A.studentAvatar, { backgroundColor: C.amber }]}>
+                      <Text style={A.studentAvatarTxt}>{r.name?.split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase()}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={A.studentName}>{r.name}</Text>
+                      <Text style={A.studentSub}>{r.class_name} · {r.school_name}</Text>
+                      <View style={{ flexDirection: 'row', marginTop: 4 }}>
+                        <View style={{ backgroundColor: C.amber + '20', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: C.amber + '40' }}>
+                          <Text style={{ color: C.amber, fontSize: 10, fontWeight: '700' }}>⏳ PENDING APPROVAL</Text>
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+                ))
+            }
+            <View style={{ height: 48 }} />
           </ScrollView>
         </View>
       </Modal>
