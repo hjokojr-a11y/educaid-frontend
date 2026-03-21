@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Alert, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
 
@@ -8,7 +8,7 @@ function showAlert(title: string, msg?: string) { alert(msg ? title + ': ' + msg
 
 const C = {
   white: '#FFFFFF', canvas: '#F7F8F5',
-  green: '#1B5E3B', greenLight: '#EAF2EC', greenMid: '#2E7D52',
+  green: '#1B5E3B', greenLight: '#EAF2EC',
   navy: '#0C1F4A', navyLight: '#E8EDF8',
   grey: '#6B7280', greyLight: '#E5E7EB', greyMid: '#9CA3AF', greyDark: '#374151',
   black: '#0A0C10', border: '#D1D5DB',
@@ -26,45 +26,6 @@ function Field({ value, onChange, placeholder, secure, keyboard }: any) {
         placeholder={placeholder} placeholderTextColor={C.greyMid}
         secureTextEntry={secure} autoCapitalize="none"
         keyboardType={keyboard || 'default'} />
-
-      {/* Student Requests Modal */}
-      <Modal visible={showRequests} animationType="slide">
-        <View style={[A.fill, { backgroundColor: C.canvas }]}>
-          <View style={A.screenHeader}>
-            <BackBtn onPress={() => setShowRequests(false)} label="← Back" />
-            <View style={{ flex: 1 }}>
-              <Text style={A.screenHeaderTitle}>Student Requests</Text>
-              <Text style={A.screenHeaderSub}>Pending & approved registrations</Text>
-            </View>
-          </View>
-          <ScrollView style={{ flex: 1, padding: 16 }}>
-            {requests.length === 0
-              ? <View style={A.empty}>
-                  <Text style={{ fontSize: 32, marginBottom: 12 }}>📋</Text>
-                  <Text style={A.emptyTxt}>No pending requests.</Text>
-                </View>
-              : requests.map((r: any) => (
-                  <View key={r.id} style={[A.studentCard, { borderLeftWidth: 3, borderLeftColor: C.amber }]}>
-                    <View style={[A.studentAvatar, { backgroundColor: C.amber }]}>
-                      <Text style={A.studentAvatarTxt}>{r.name?.split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase()}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={A.studentName}>{r.name}</Text>
-                      <Text style={A.studentSub}>{r.class_name} · {r.school_name}</Text>
-                      <View style={{ flexDirection: 'row', marginTop: 4 }}>
-                        <View style={{ backgroundColor: C.amber + '20', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: C.amber + '40' }}>
-                          <Text style={{ color: C.amber, fontSize: 10, fontWeight: '700' }}>⏳ PENDING APPROVAL</Text>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                ))
-            }
-            <View style={{ height: 48 }} />
-          </ScrollView>
-        </View>
-      </Modal>
-
     </View>
   );
 }
@@ -94,7 +55,6 @@ function ActionCard({ icon, title, sub, color, onPress }: any) {
 
 export default function SchoolAdminScreen() {
   const router = useRouter();
-
   const [token, setToken]       = useState('');
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -114,26 +74,23 @@ export default function SchoolAdminScreen() {
   const [showSports,     setShowSports]     = useState(false);
   const [showAnnounce,   setShowAnnounce]   = useState(false);
   const [showAlert,      setShowAlert]      = useState(false);
+  const [showRequests,   setShowRequests]   = useState(false);
 
-  const [studentName, setStudentName] = useState('');
-  const [studentClass, setStudentClass] = useState('');
-  const [parentName,  setParentName]  = useState('');
-  const [parentPhone, setParentPhone] = useState('');
-  const [registering, setRegistering] = useState(false);
-  const [studentFirstName, setStudentFirstName] = useState('');
+  const [studentFirstName,  setStudentFirstName]  = useState('');
   const [studentMiddleName, setStudentMiddleName] = useState('');
-  const [studentLastName, setStudentLastName] = useState('');
-  const [studentDOB, setStudentDOB] = useState('');
-  const [studentSex, setStudentSex] = useState('');
-  const [studentReligion, setStudentReligion] = useState('');
-  const [studentPhoto, setStudentPhoto] = useState('');
-  const [studentEmail, setStudentEmail] = useState('');
-  const [showRequests, setShowRequests] = useState(false);
-  const [requests, setRequests] = useState<any[]>([]);
+  const [studentLastName,   setStudentLastName]   = useState('');
+  const [studentClass,      setStudentClass]      = useState('');
+  const [parentName,        setParentName]        = useState('');
+  const [parentPhone,       setParentPhone]       = useState('');
+  const [studentDOB,        setStudentDOB]        = useState('');
+  const [studentSex,        setStudentSex]        = useState('');
+  const [studentReligion,   setStudentReligion]   = useState('');
+  const [studentPhoto,      setStudentPhoto]      = useState('');
+  const [studentEmail,      setStudentEmail]      = useState('');
+  const [registering,       setRegistering]       = useState(false);
+
+  const [requests,        setRequests]        = useState<any[]>([]);
   const [loadingRequests, setLoadingRequests] = useState(false);
-  const [studentEmail, setStudentEmail] = useState('');
-  const [showRequests, setShowRequests] = useState(false);
-  const [requests, setRequests] = useState<any[]>([]);
 
   const [attendance, setAttendance] = useState<any>({});
   const [savingAtt,  setSavingAtt]  = useState(false);
@@ -168,73 +125,24 @@ export default function SchoolAdminScreen() {
   const [alDesc,    setAlDesc]    = useState('');
   const [savingAl,  setSavingAl]  = useState(false);
 
-  async function resetStudentRecords(studentId: string, studentName: string) {
-    if (confirm('Reset all records for ' + studentName + '? This cannot be undone.')) {
-      try {
-        const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}/records`, {
-          method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) showAlert('Done', 'Records for ' + studentName + ' have been reset.');
-        else showAlert('Error', 'Failed to reset records');
-      } catch { showAlert('Error', 'Failed to reset records'); }
-    }
-  }
-
-  async function deleteStudent(studentId: string, studentName: string) {
-    if (confirm('Permanently delete ' + studentName + '?')) {
-      try {
-        const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}`, {
-          method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
-        });
-        if (res.ok) {
-          showAlert('Deleted', studentName + ' has been deleted.');
-          loadAllStudents(token, user.school.id);
-        } else showAlert('Error', 'Failed to delete student');
-      } catch { showAlert('Error', 'Failed to delete student'); }
-    }
-  }
-
-  async function loadRequests() {
-    try {
-      const res = await fetch(`${API_URL}/schools/${user.school.id}/students?pending=true`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      // Get all students including inactive (pending)
-      const res2 = await fetch(`${API_URL}/auth/super/pending-students`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const d = await res2.json();
-      // Filter to only this school
-      const schoolRequests = (d.students || []).filter((s: any) => s.school_id === user.school.id || s.school_name === user.school.name);
-      setRequests(schoolRequests);
-    } catch {}
-  }
-
-  async function loadRequests(t?: string) {
-    setLoadingRequests(true);
-    try {
-      const res = await fetch(`${API_URL}/schools/${user?.school?.id}/students/pending`, {
-        headers: { Authorization: `Bearer ${t || token}` }
-      });
-      if (res.ok) {
-        const d = await res.json();
-        setRequests(d.students || []);
-      } else {
-        setRequests([]);
-      }
-    } catch { setRequests([]); }
-    setLoadingRequests(false);
-  }
-
   const SPORTS = [
-    { id:'athletics',   label:'Athletics'    },
-    { id:'football',    label:'Football'     },
-    { id:'basketball',  label:'Basketball'   },
-    { id:'volleyball',  label:'Volleyball'   },
-    { id:'swimming',    label:'Swimming'     },
-    { id:'gymnastics',  label:'Gymnastics'   },
-    { id:'general',     label:'Physical Ed.' },
+    { id:'athletics', label:'Athletics' }, { id:'football', label:'Football' },
+    { id:'basketball', label:'Basketball' }, { id:'volleyball', label:'Volleyball' },
+    { id:'swimming', label:'Swimming' }, { id:'gymnastics', label:'Gymnastics' },
+    { id:'general', label:'Physical Ed.' },
   ];
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('admin_session');
+      if (saved) {
+        const { token: t, user: u } = JSON.parse(saved);
+        setToken(t); setUser(u); setLoggedIn(true);
+        loadClasses(t, u.school.id);
+        loadAllStudents(t, u.school.id);
+      }
+    } catch {}
+  }, []);
 
   async function login() {
     if (!email || !password) { showAlert('Error', 'Enter email and password'); return; }
@@ -282,29 +190,49 @@ export default function SchoolAdminScreen() {
     } catch {}
   }
 
+  async function loadRequests() {
+    setLoadingRequests(true);
+    try {
+      const res = await fetch(`${API_URL}/schools/${user?.school?.id}/students/pending`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setRequests(d.students || []);
+      } else setRequests([]);
+    } catch { setRequests([]); }
+    setLoadingRequests(false);
+  }
+
   async function registerStudent() {
-    if ((!studentFirstName && !studentName) || !studentClass) { showAlert('Error', 'Student name and class are required'); return; }
+    if (!studentFirstName || !studentLastName || !studentClass) {
+      showAlert('Error', 'First name, last name and class are required');
+      return;
+    }
     setRegistering(true);
     try {
-      const fullName = studentFirstName ? [studentFirstName, studentMiddleName, studentLastName].filter(Boolean).join(' ') : studentName;
-      const res  = await fetch(`${API_URL}/auth/admin/register-student`, {
+      const fullName = [studentFirstName, studentMiddleName, studentLastName].filter(Boolean).join(' ');
+      const res = await fetch(`${API_URL}/auth/admin/register-student`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ 
-          name: fullName, 
-          firstName: studentFirstName, middleName: studentMiddleName, lastName: studentLastName,
-          classId: studentClass, parentName, parentPhone, studentEmail,
-          dateOfBirth: studentDOB, sex: studentSex, religion: studentReligion, photo: studentPhoto
+        body: JSON.stringify({
+          name: fullName, firstName: studentFirstName,
+          middleName: studentMiddleName, lastName: studentLastName,
+          classId: studentClass, parentName, parentPhone,
+          dateOfBirth: studentDOB, sex: studentSex,
+          religion: studentReligion, photo: studentPhoto,
+          studentEmail: studentEmail
         }),
       });
       const data = await res.json();
       if (!res.ok) { showAlert('Error', data.error || 'Failed'); setRegistering(false); return; }
-      showAlert('Request Sent!', fullName + ' registration request sent successfully! Awaiting Super Admin approval.');
+      showAlert('Request Sent!', fullName + ' submitted for Super Admin approval. Check Student Requests to track status.');
       setRegistering(false); setShowRegister(false);
       setStudentFirstName(''); setStudentMiddleName(''); setStudentLastName('');
-      setStudentName(''); setStudentClass(''); setParentName(''); setParentPhone('');
-      setStudentDOB(''); setStudentSex(''); setStudentReligion(''); setStudentPhoto(''); setStudentEmail('');
-    } catch { showAlert('Error', 'Failed'); setRegistering(false); }
+      setStudentClass(''); setParentName(''); setParentPhone('');
+      setStudentDOB(''); setStudentSex(''); setStudentReligion('');
+      setStudentPhoto(''); setStudentEmail('');
+    } catch { showAlert('Error', 'Failed to register student'); setRegistering(false); }
   }
 
   async function saveAttendance() {
@@ -316,7 +244,7 @@ export default function SchoolAdminScreen() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ records, date: today }),
       });
-      if (res.ok) { showAlert('✅ Saved!', `Attendance for ${selectedClass.name} recorded.`); setShowAttendance(false); }
+      if (res.ok) { showAlert('Saved', 'Attendance for ' + selectedClass.name + ' recorded.'); setShowAttendance(false); }
       else showAlert('Error', 'Failed to save attendance');
     } catch { showAlert('Error', 'Failed to save attendance'); }
     setSavingAtt(false);
@@ -331,7 +259,7 @@ export default function SchoolAdminScreen() {
         body: JSON.stringify({ studentId: acaStudent, term: acaTerm, subject: acaSubject, score: acaScore ? parseFloat(acaScore) : null, grade: acaGrade, remarks: acaRemarks }),
       });
       const data = await res.json();
-      if (res.ok) { showAlert('✅ Saved!', `Academic report for ${acaSubject} saved.`); setShowAcademic(false); setAcaStudent(''); setAcaSubject(''); setAcaScore(''); setAcaGrade(''); setAcaRemarks(''); }
+      if (res.ok) { showAlert('Saved', 'Academic report saved.'); setShowAcademic(false); setAcaStudent(''); setAcaSubject(''); setAcaScore(''); setAcaGrade(''); setAcaRemarks(''); }
       else showAlert('Error', data.error || 'Failed');
     } catch { showAlert('Error', 'Failed'); }
     setSavingAca(false);
@@ -345,7 +273,7 @@ export default function SchoolAdminScreen() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ classId: hwClass || null, subject: hwSubject, description: hwDesc, hwType, dueDate: hwDue || null }),
       });
-      if (res.ok) { showAlert('✅ Posted!', `Homework for ${hwSubject} posted.`); setShowHomework(false); setHwSubject(''); setHwDesc(''); setHwDue(''); setHwClass(''); }
+      if (res.ok) { showAlert('Posted', 'Homework posted.'); setShowHomework(false); setHwSubject(''); setHwDesc(''); setHwDue(''); setHwClass(''); }
       else showAlert('Error', 'Failed');
     } catch { showAlert('Error', 'Failed'); }
     setSavingHw(false);
@@ -360,7 +288,7 @@ export default function SchoolAdminScreen() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ studentId: spStudent, sport: spSport, sportLabel: sc?.label, term: spTerm, rating: spRating, notes: spNotes }),
       });
-      if (res.ok) { showAlert('✅ Saved!', 'Sports assessment recorded.'); setShowSports(false); setSpStudent(''); setSpNotes(''); }
+      if (res.ok) { showAlert('Saved', 'Sports assessment recorded.'); setShowSports(false); setSpStudent(''); setSpNotes(''); }
       else showAlert('Error', 'Failed');
     } catch { showAlert('Error', 'Failed'); }
     setSavingSp(false);
@@ -374,7 +302,7 @@ export default function SchoolAdminScreen() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ text: annText }),
       });
-      if (res.ok) { showAlert('✅ Sent!', 'Announcement posted.'); setShowAnnounce(false); setAnnText(''); }
+      if (res.ok) { showAlert('Sent', 'Announcement posted.'); setShowAnnounce(false); setAnnText(''); }
       else showAlert('Error', 'Failed');
     } catch { showAlert('Error', 'Failed'); }
     setSavingAnn(false);
@@ -388,10 +316,36 @@ export default function SchoolAdminScreen() {
         method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify({ studentId: alStudent, title: alTitle, description: alDesc }),
       });
-      if (res.ok) { showAlert('✅ Sent!', 'Alert sent to parent.'); setShowAlert(false); setAlStudent(''); setAlTitle(''); setAlDesc(''); }
+      if (res.ok) { showAlert('Sent', 'Alert sent to parent.'); setShowAlert(false); setAlStudent(''); setAlTitle(''); setAlDesc(''); }
       else showAlert('Error', 'Failed');
     } catch { showAlert('Error', 'Failed'); }
     setSavingAl(false);
+  }
+
+  async function resetStudentRecords(studentId: string, studentName: string) {
+    if (confirm('Reset all records for ' + studentName + '? This cannot be undone.')) {
+      try {
+        const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}/records`, {
+          method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) showAlert('Done', 'Records for ' + studentName + ' have been reset.');
+        else showAlert('Error', 'Failed to reset records');
+      } catch { showAlert('Error', 'Failed to reset records'); }
+    }
+  }
+
+  async function deleteStudent(studentId: string, studentName: string) {
+    if (confirm('Permanently delete ' + studentName + '?')) {
+      try {
+        const res = await fetch(`${API_URL}/schools/${user.school.id}/students/${studentId}`, {
+          method: 'DELETE', headers: { Authorization: `Bearer ${token}` }
+        });
+        if (res.ok) {
+          showAlert('Deleted', studentName + ' has been deleted.');
+          loadAllStudents(token, user.school.id);
+        } else showAlert('Error', 'Failed to delete student');
+      } catch { showAlert('Error', 'Failed to delete student'); }
+    }
   }
 
   // ── Login ────────────────────────────────────────────────────────────────────
@@ -399,7 +353,7 @@ export default function SchoolAdminScreen() {
     return (
       <View style={[A.fill, { backgroundColor: C.canvas }]}>
         <ScrollView contentContainerStyle={A.pad} keyboardShouldPersistTaps="handled">
-          <BackBtn onPress={() => router.push('/')} label='← Home' />
+          <BackBtn onPress={() => router.push('/')} label="← Home" />
           <View style={A.loginTop}>
             <View style={A.loginIcon}><Text style={{ fontSize: 28 }}>🏫</Text></View>
             <Text style={A.loginH1}>School Admin</Text>
@@ -481,19 +435,22 @@ export default function SchoolAdminScreen() {
 
       {/* Header */}
       <View style={A.dashHeader}>
-        <TouchableOpacity onPress={() => { try { localStorage.setItem('admin_session', JSON.stringify({ token, user })); } catch {} router.push('/'); }} style={A.headerBack}>
+        <TouchableOpacity
+          onPress={() => { try { localStorage.setItem('admin_session', JSON.stringify({ token, user })); } catch {} router.push('/'); }}
+          style={A.headerBack}>
           <Text style={A.headerBackTxt}>←</Text>
         </TouchableOpacity>
         <View style={{ flex: 1 }}>
           <Text style={A.dashHeaderSchool}>{user?.school?.name}</Text>
           <Text style={A.dashHeaderWelcome}>Welcome, {user?.name}</Text>
         </View>
-        <TouchableOpacity style={A.signOutBtn} onPress={() => setLoggedIn(false)}>
+        <TouchableOpacity style={A.signOutBtn}
+          onPress={() => { setLoggedIn(false); setEmail(''); setPassword(''); try { localStorage.removeItem('admin_session'); } catch {} }}>
           <Text style={A.signOutBtnTxt}>Sign Out</Text>
         </TouchableOpacity>
       </View>
 
-      {/* Stats strip */}
+      {/* Stats */}
       <View style={A.statsStrip}>
         <View style={A.statItem}>
           <Text style={A.statNum}>{classes.length}</Text>
@@ -527,15 +484,14 @@ export default function SchoolAdminScreen() {
         {tab === 'home' && (
           <>
             <Text style={A.secHead}>QUICK ACTIONS</Text>
-            <ActionCard icon="📅" title="Mark Attendance"   sub="Record today's attendance"        color={C.green}  onPress={() => setTab('attendance')} />
-            <ActionCard icon="📚" title="Academic Report"   sub="Post grades and reports"           color={C.navy}   onPress={() => setShowAcademic(true)} />
-            <ActionCard icon="📝" title="Post Homework"     sub="Assign homework to a class"        color={C.purple} onPress={() => setShowHomework(true)} />
-            <ActionCard icon="🏃" title="Sports Assessment" sub="Record physical education results" color={C.amber}  onPress={() => setShowSports(true)} />
-            <ActionCard icon="📢" title="Announcement"      sub="Send message to all parents"       color={C.teal}   onPress={() => setShowAnnounce(true)} />
-            <ActionCard icon="🚨" title="Alert Parent"      sub="Send urgent alert to a parent"     color={C.red}    onPress={() => setShowAlert(true)} />
-            <ActionCard icon="👤" title="Register Student"  sub="Add a new student"                 color={C.green}  onPress={() => setShowRegister(true)} />
-            <ActionCard icon="📋" title="Student Requests"  sub="Track pending & approved students"  color={C.teal}   onPress={() => { loadRequests(); setShowRequests(true); }} />
-            <ActionCard icon="📋" title="Student Requests"   sub="View pending & approved requests"    color={C.teal}   onPress={() => { loadRequests(); setShowRequests(true); }} />
+            <ActionCard icon="📅" title="Mark Attendance"    sub="Record today's attendance"        color={C.green}  onPress={() => setTab('attendance')} />
+            <ActionCard icon="📚" title="Academic Report"    sub="Post grades and reports"           color={C.navy}   onPress={() => setShowAcademic(true)} />
+            <ActionCard icon="📝" title="Post Homework"      sub="Assign homework to a class"        color={C.purple} onPress={() => setShowHomework(true)} />
+            <ActionCard icon="🏃" title="Sports Assessment"  sub="Record physical education results" color={C.amber}  onPress={() => setShowSports(true)} />
+            <ActionCard icon="📢" title="Announcement"       sub="Send message to all parents"       color={C.teal}   onPress={() => setShowAnnounce(true)} />
+            <ActionCard icon="🚨" title="Alert Parent"       sub="Send urgent alert to a parent"     color={C.red}    onPress={() => setShowAlert(true)} />
+            <ActionCard icon="👤" title="Register Student"   sub="Add a new student"                 color={C.green}  onPress={() => setShowRegister(true)} />
+            <ActionCard icon="📋" title="Student Requests"   sub="Track pending registrations"       color={C.teal}   onPress={() => { loadRequests(); setShowRequests(true); }} />
           </>
         )}
 
@@ -578,8 +534,7 @@ export default function SchoolAdminScreen() {
                       <Text style={A.studentName}>{s.name}</Text>
                       <Text style={A.studentSub}>{s.class_name} · {s.student_code}</Text>
                     </View>
-                    <TouchableOpacity style={A.resetBtn}
-                      onPress={() => resetStudentRecords(s.id, s.name)}>
+                    <TouchableOpacity style={A.resetBtn} onPress={() => resetStudentRecords(s.id, s.name)}>
                       <Text style={A.resetBtnTxt}>↺</Text>
                     </TouchableOpacity>
                     <TouchableOpacity style={[A.resetBtn, { backgroundColor: '#FEE2E2', borderColor: '#B91C1C33', marginLeft: 6 }]}
@@ -597,6 +552,49 @@ export default function SchoolAdminScreen() {
 
       {/* ── Modals ── */}
 
+      {/* Student Requests */}
+      <Modal visible={showRequests} animationType="slide">
+        <View style={[A.fill, { backgroundColor: C.canvas }]}>
+          <View style={A.screenHeader}>
+            <BackBtn onPress={() => setShowRequests(false)} label="← Back" />
+            <View style={{ flex: 1 }}>
+              <Text style={A.screenHeaderTitle}>Student Requests</Text>
+              <Text style={A.screenHeaderSub}>Pending registrations</Text>
+            </View>
+            <TouchableOpacity onPress={loadRequests} style={{ padding: 8 }}>
+              <Text style={{ color: C.navy, fontSize: 13, fontWeight: '700' }}>↺ Refresh</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={{ flex: 1, padding: 16 }}>
+            {loadingRequests
+              ? <ActivityIndicator color={C.navy} size="large" style={{ marginTop: 40 }} />
+              : requests.length === 0
+                ? <View style={A.empty}>
+                    <Text style={{ fontSize: 32, marginBottom: 12 }}>📋</Text>
+                    <Text style={A.emptyTxt}>No pending student requests.</Text>
+                  </View>
+                : requests.map((r: any) => (
+                    <View key={r.id} style={[A.studentCard, { borderLeftWidth: 3, borderLeftColor: C.amber }]}>
+                      <View style={[A.studentAvatar, { backgroundColor: C.amber }]}>
+                        <Text style={A.studentAvatarTxt}>{r.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase()}</Text>
+                      </View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={A.studentName}>{r.name}</Text>
+                        <Text style={A.studentSub}>{r.class_name}</Text>
+                        <View style={{ flexDirection: 'row', marginTop: 6 }}>
+                          <View style={{ backgroundColor: C.amber + '20', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: C.amber + '44' }}>
+                            <Text style={{ color: C.amber, fontSize: 10, fontWeight: '700' }}>⏳ PENDING APPROVAL</Text>
+                          </View>
+                        </View>
+                      </View>
+                    </View>
+                  ))
+            }
+            <View style={{ height: 48 }} />
+          </ScrollView>
+        </View>
+      </Modal>
+
       {/* Register Student */}
       <Modal visible={showRegister} animationType="slide">
         <View style={[A.fill, { backgroundColor: C.canvas }]}>
@@ -604,7 +602,6 @@ export default function SchoolAdminScreen() {
             <BackBtn onPress={() => setShowRegister(false)} label="← Back" />
             <Text style={A.modalTitle}>Register Student</Text>
 
-            {/* Photo Upload */}
             <Lbl text="STUDENT PHOTO" />
             <TouchableOpacity style={A.photoBox} onPress={() => {
               try {
@@ -629,7 +626,7 @@ export default function SchoolAdminScreen() {
             <Lbl text="FIRST NAME *" />
             <Field value={studentFirstName} onChange={setStudentFirstName} placeholder="e.g. John" />
             <Lbl text="MIDDLE NAME" />
-            <Field value={studentMiddleName} onChange={setStudentMiddleName} placeholder="e.g. Paul" />
+            <Field value={studentMiddleName} onChange={setStudentMiddleName} placeholder="e.g. Paul (optional)" />
             <Lbl text="LAST NAME *" />
             <Field value={studentLastName} onChange={setStudentLastName} placeholder="e.g. Fon" />
 
@@ -671,14 +668,14 @@ export default function SchoolAdminScreen() {
 
             <Lbl text="STUDENT / PARENT EMAIL" />
             <Field value={studentEmail} onChange={setStudentEmail} placeholder="student@email.com or parent@email.com" keyboard="email-address" />
+
             <Lbl text="PARENT / GUARDIAN NAME" />
             <Field value={parentName} onChange={setParentName} placeholder="Parent or guardian name" />
             <Lbl text="PARENT PHONE" />
             <Field value={parentPhone} onChange={setParentPhone} placeholder="+237..." keyboard="phone-pad" />
-            <Lbl text="STUDENT / PARENT EMAIL (credentials sent here)" />
-            <Field value={studentEmail} onChange={setStudentEmail} placeholder="email@example.com" keyboard="email-address" />
+
             <TouchableOpacity style={A.signInBtn} onPress={registerStudent} disabled={registering}>
-              {registering ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Register Student</Text>}
+              {registering ? <ActivityIndicator color={C.white} /> : <Text style={A.signInBtnTxt}>Submit Registration</Text>}
             </TouchableOpacity>
           </ScrollView>
         </View>
@@ -824,49 +821,6 @@ export default function SchoolAdminScreen() {
         </View>
       </Modal>
 
-      {/* Student Requests */}
-      <Modal visible={showRequests} animationType="slide">
-        <View style={[A.fill, { backgroundColor: C.canvas }]}>
-          <View style={A.screenHeader}>
-            <BackBtn onPress={() => setShowRequests(false)} label="← Back" />
-            <View style={{ flex: 1 }}>
-              <Text style={A.screenHeaderTitle}>Student Requests</Text>
-              <Text style={A.screenHeaderSub}>Track registration status</Text>
-            </View>
-            <TouchableOpacity onPress={() => loadRequests()} style={{ padding: 8 }}>
-              <Text style={{ color: C.navy, fontSize: 13, fontWeight: '700' }}>↺ Refresh</Text>
-            </TouchableOpacity>
-          </View>
-          <ScrollView style={{ flex: 1, padding: 16 }}>
-            {loadingRequests
-              ? <ActivityIndicator color={C.navy} size="large" style={{ marginTop: 40 }} />
-              : requests.length === 0
-                ? <View style={A.empty}>
-                    <Text style={{ fontSize: 32, marginBottom: 12 }}>📋</Text>
-                    <Text style={A.emptyTxt}>No student requests yet.</Text>
-                  </View>
-                : requests.map((r: any) => (
-                    <View key={r.id} style={[A.studentCard, { borderLeftWidth: 3, borderLeftColor: C.amber }]}>
-                      <View style={[A.studentAvatar, { backgroundColor: C.amber }]}>
-                        <Text style={A.studentAvatarTxt}>{r.name?.split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase()}</Text>
-                      </View>
-                      <View style={{ flex: 1 }}>
-                        <Text style={A.studentName}>{r.name}</Text>
-                        <Text style={A.studentSub}>{r.class_name} · {r.school_name}</Text>
-                        <View style={{ flexDirection: 'row', gap: 8, marginTop: 6 }}>
-                          <View style={{ backgroundColor: C.amber + '20', borderRadius: 20, paddingHorizontal: 10, paddingVertical: 4, borderWidth: 1, borderColor: C.amber + '44' }}>
-                            <Text style={{ color: C.amber, fontSize: 10, fontWeight: '700' }}>⏳ PENDING APPROVAL</Text>
-                          </View>
-                        </View>
-                      </View>
-                    </View>
-                  ))
-            }
-            <View style={{ height: 48 }} />
-          </ScrollView>
-        </View>
-      </Modal>
-
       {/* Alert */}
       <Modal visible={showAlert} animationType="slide">
         <View style={[A.fill, { backgroundColor: C.canvas }]}>
@@ -894,45 +848,6 @@ export default function SchoolAdminScreen() {
         </View>
       </Modal>
 
-
-      {/* Student Requests Modal */}
-      <Modal visible={showRequests} animationType="slide">
-        <View style={[A.fill, { backgroundColor: C.canvas }]}>
-          <View style={A.screenHeader}>
-            <BackBtn onPress={() => setShowRequests(false)} label="← Back" />
-            <View style={{ flex: 1 }}>
-              <Text style={A.screenHeaderTitle}>Student Requests</Text>
-              <Text style={A.screenHeaderSub}>Pending & approved registrations</Text>
-            </View>
-          </View>
-          <ScrollView style={{ flex: 1, padding: 16 }}>
-            {requests.length === 0
-              ? <View style={A.empty}>
-                  <Text style={{ fontSize: 32, marginBottom: 12 }}>📋</Text>
-                  <Text style={A.emptyTxt}>No pending requests.</Text>
-                </View>
-              : requests.map((r: any) => (
-                  <View key={r.id} style={[A.studentCard, { borderLeftWidth: 3, borderLeftColor: C.amber }]}>
-                    <View style={[A.studentAvatar, { backgroundColor: C.amber }]}>
-                      <Text style={A.studentAvatarTxt}>{r.name?.split(' ').map((w: string) => w[0]).join('').slice(0,2).toUpperCase()}</Text>
-                    </View>
-                    <View style={{ flex: 1 }}>
-                      <Text style={A.studentName}>{r.name}</Text>
-                      <Text style={A.studentSub}>{r.class_name} · {r.school_name}</Text>
-                      <View style={{ flexDirection: 'row', marginTop: 4 }}>
-                        <View style={{ backgroundColor: C.amber + '20', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 3, borderWidth: 1, borderColor: C.amber + '40' }}>
-                          <Text style={{ color: C.amber, fontSize: 10, fontWeight: '700' }}>⏳ PENDING APPROVAL</Text>
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                ))
-            }
-            <View style={{ height: 48 }} />
-          </ScrollView>
-        </View>
-      </Modal>
-
     </View>
   );
 }
@@ -952,7 +867,9 @@ const A = StyleSheet.create({
   fieldTxt:          { color: C.black, fontSize: 15, flex: 1 },
   signInBtn:         { backgroundColor: C.navy, borderRadius: 14, padding: 17, alignItems: 'center' },
   signInBtnTxt:      { color: C.white, fontSize: 16, fontWeight: '700' },
-  dashHeader:        { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: 16, paddingTop: 52, borderBottomWidth: 1, borderBottomColor: C.border },
+  dashHeader:        { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: 16, paddingTop: 52, borderBottomWidth: 1, borderBottomColor: C.border, gap: 10 },
+  headerBack:        { width: 36, height: 36, borderRadius: 10, backgroundColor: C.canvas, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border },
+  headerBackTxt:     { fontSize: 18, color: C.navy },
   dashHeaderSchool:  { fontSize: 16, fontWeight: '800', color: C.navy, marginBottom: 2 },
   dashHeaderWelcome: { fontSize: 12, color: C.grey },
   signOutBtn:        { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
@@ -980,6 +897,8 @@ const A = StyleSheet.create({
   studentAvatarTxt:  { color: C.white, fontWeight: '800', fontSize: 13 },
   studentName:       { fontSize: 14, fontWeight: '700', color: C.navy, marginBottom: 2 },
   studentSub:        { fontSize: 11, color: C.grey },
+  resetBtn:          { width: 34, height: 34, borderRadius: 9, backgroundColor: C.greenLight, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.green + '33' },
+  resetBtnTxt:       { fontSize: 16 },
   attCard:           { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: C.border },
   attAvatar:         { width: 38, height: 38, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
   attAvatarTxt:      { color: C.white, fontWeight: '800', fontSize: 13 },
@@ -999,13 +918,8 @@ const A = StyleSheet.create({
   pillActive:        { backgroundColor: C.navy, borderColor: C.navy },
   pillTxt:           { fontSize: 13, color: C.grey, fontWeight: '600' },
   pillTxtActive:     { color: C.white },
-  headerBack:        { width: 36, height: 36, borderRadius: 10, backgroundColor: C.canvas, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border, marginRight: 8 },
-  headerBackTxt:     { fontSize: 18, color: C.navy },
-  resetBtn:          { width: 34, height: 34, borderRadius: 9, backgroundColor: '#EAF2EC', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#1B5E3B33', marginLeft: 6 },
-  resetBtnTxt:       { fontSize: 16 },
-  photoBox:          { backgroundColor: C.white, borderRadius: 14, borderWidth: 2, borderColor: C.border, borderStyle: 'dashed', padding: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 20, minHeight: 80 },
+  photoBox:          { backgroundColor: C.white, borderRadius: 14, borderWidth: 2, borderColor: C.border, padding: 24, alignItems: 'center', justifyContent: 'center', marginBottom: 20, minHeight: 80 },
   photoBoxTxt:       { color: C.grey, fontSize: 14, fontWeight: '600' },
   empty:             { alignItems: 'center', padding: 40, backgroundColor: C.white, borderRadius: 14, borderWidth: 1, borderColor: C.border },
   emptyTxt:          { color: C.grey, fontSize: 13 },
-
 });
