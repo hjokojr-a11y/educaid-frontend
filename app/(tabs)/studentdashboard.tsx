@@ -126,33 +126,21 @@ export default function StudentDashboardScreen() {
     setLoading(false);
   }
 
-   function doLogout() {
-    Alert.alert(
-      'Sign Out',
-      'Are you sure you want to sign out?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: () => {
-            setSession(null);
-            setScreen('login');
-            setStudentCode('');
-            setPassword('');
-            setTab('home');
-            setAttendance([]);
-            setAcademic([]);
-            setHomework([]);
-            setSports([]);
-            setAnnouncements([]);
-            setAlerts([]);
-          }
-        }
-      ]
-    );
+function doLogout() {
+    if (window.confirm('Are you sure you want to sign out?')) {
+      setSession(null);
+      setScreen('login');
+      setStudentCode('');
+      setPassword('');
+      setTab('home');
+      setAttendance([]);
+      setAcademic([]);
+      setHomework([]);
+      setSports([]);
+      setAnnouncements([]);
+      setAlerts([]);
+    }
   }
-
   // ── Pick school ──────────────────────────────────────────────────────────────
   if (screen === 'pickSchool') {
     return (
