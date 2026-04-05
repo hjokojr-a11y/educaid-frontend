@@ -126,18 +126,31 @@ export default function StudentDashboardScreen() {
     setLoading(false);
   }
 
-  function doLogout() {
-    setSession(null);
-    setScreen('login');
-    setStudentCode('');
-    setPassword('');
-    setTab('home');
-    setAttendance([]);
-    setAcademic([]);
-    setHomework([]);
-    setSports([]);
-    setAnnouncements([]);
-    setAlerts([]);
+   function doLogout() {
+    Alert.alert(
+      'Sign Out',
+      'Are you sure you want to sign out?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Sign Out',
+          style: 'destructive',
+          onPress: () => {
+            setSession(null);
+            setScreen('login');
+            setStudentCode('');
+            setPassword('');
+            setTab('home');
+            setAttendance([]);
+            setAcademic([]);
+            setHomework([]);
+            setSports([]);
+            setAnnouncements([]);
+            setAlerts([]);
+          }
+        }
+      ]
+    );
   }
 
   // ── Pick school ──────────────────────────────────────────────────────────────
@@ -145,7 +158,7 @@ export default function StudentDashboardScreen() {
     return (
       <View style={[S.fill, { backgroundColor: C.canvas }]}>
         <ScrollView contentContainerStyle={S.pad}>
-          <TouchableOpacity style={S.backBtn} onPress={() => setScreen('login')}>
+ ')}         <TouchableOpacity style={S.backBtn} onPress={() => setScreen('login>
             <Text style={S.backBtnTxt}>← Back</Text>
           </TouchableOpacity>
           <Text style={S.h1}>Select School</Text>
@@ -484,8 +497,8 @@ const S = StyleSheet.create({
   dashAvatarTxt:   { fontWeight: '900', fontSize: 15, color: C.white },
   dashName:        { fontSize: 15, fontWeight: '700', color: C.navy },
   dashSub:         { fontSize: 11, color: C.grey, marginTop: 2 },
-  signOutBtn:      { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
-  signOutBtnTxt:   { color: C.grey, fontSize: 12, fontWeight: '600' },
+    signOutBtn:      { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
+    signOutBtnTxt:   { color: C.grey, fontSize: 12, fontWeight: '600' },
   idStrip:         { paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
   idStripTxt:      { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
   tabBarWrap:      { backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 },
