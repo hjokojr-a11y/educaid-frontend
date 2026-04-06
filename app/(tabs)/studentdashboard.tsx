@@ -51,6 +51,7 @@ export default function StudentDashboardScreen() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -94,52 +95,23 @@ export default function StudentDashboardScreen() {
     setLoadingSchools(false);
   }
 
-  async function doLogin() {
-    if (!studentCode || !password) { showAlert('Error', 'Please enter your Student ID and password'); return; }
-    if (!selectedSchool) { showAlert('Error', 'Please select your school first'); return; }
-    setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/auth/student/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ studentCode, password, schoolId: selectedSchool.id }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        showAlert('Login Failed', data.error || 'Invalid credentials');
-        setLoading(false);
-        return;
-      }
-      // Set session first
-      setSession({ token: data.token, user: data.user });
-      // Load data
-      setDataLoading(true);
-      await loadData(data.token, data.user.id);
-      setDataLoading(false);
-      // Save session
-      try { localStorage.setItem('student_session', JSON.stringify({ token: data.token, user: data.user, school: selectedSchool })); } catch {}
-      // Navigate to dashboard
-      setScreen('dashboard');
-    } catch (e) {
-      showAlert('Error', 'Cannot connect to server.');
-    }
-    setLoading(false);
+ function doLogout() {
+    setShowLogoutModal(true);
   }
 
-function doLogout() {
-    if (window.confirm('Are you sure you want to sign out?')) {
-      setSession(null);
-      setScreen('login');
-      setStudentCode('');
-      setPassword('');
-      setTab('home');
-      setAttendance([]);
-      setAcademic([]);
-      setHomework([]);
-      setSports([]);
-      setAnnouncements([]);
-      setAlerts([]);
-    }
+function confirmLogout() {
+    setShowLogoutModal(false);
+    setSession(null);
+    setScreen('login');
+    setStudentCode('');
+    setPassword('');
+    setTab('home');
+    setAttendance([]);
+    setAcademic([]);
+    setHomework([]);
+    setSports([]);
+    setAnnouncements([]);
+    setAlerts([]);
   }
   // ── Pick school ──────────────────────────────────────────────────────────────
   if (screen === 'pickSchool') {
@@ -449,6 +421,26 @@ function doLogout() {
             )}
 
             <View style={{ height: 48 }} />
+            {showLogoutModal && (
+              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
+                <View style={{ backgroundColor: C.white, borderRadius: 16, padding: 24, margin: 24, width: '85%' }}>
+                  <Text style={{ fontSize: 18, fontWeight: '800', color: C.navy, marginBottom: 8 }}>Sign Out</Text>
+                  <Text style={{ fontSize: 14, color: C.grey, marginBottom: 24 }}>Are you sure you want to sign out?</Text>
+                  <View style={{ flexDirection: 'row', gap: 12 }}>
+                    <TouchableOpacity
+                      style={{ flex: 1, backgroundColor: C.canvas, borderRadius: 10, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: C.border }}
+                      onPress={() => setShowLogoutModal(false)}>
+                      <Text style={{ color: C.greyDark, fontWeight: '700' }}>Cancel</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={{ flex: 1, backgroundColor: C.red, borderRadius: 10, padding: 14, alignItems: 'center' }}
+                      onPress={confirmLogout}>
+                      <Text style={{ color: C.white, fontWeight: '700' }}>Sign Out</Text>
+                    </TouchableOpacity>
+                  </View>
+                </View>
+              </View>
+            )}
           </ScrollView>
         )}
     </View>
