@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
 import { useRouter } from 'expo-router';
-import { ActivityIndicator, Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { useEffect, useState } from 'react';
+import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
 
@@ -95,11 +95,39 @@ export default function StudentDashboardScreen() {
     setLoadingSchools(false);
   }
 
- function doLogout() {
+  async function doLogin() {
+    if (!studentCode || !password) { showAlert('Error', 'Please enter your Student ID and password'); return; }
+    if (!selectedSchool) { showAlert('Error', 'Please select your school first'); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/auth/student/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ studentCode, password, schoolId: selectedSchool.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        showAlert('Login Failed', data.error || 'Invalid credentials');
+        setLoading(false);
+        return;
+      }
+      setSession({ token: data.token, user: data.user });
+      setDataLoading(true);
+      await loadData(data.token, data.user.id);
+      setDataLoading(false);
+      try { localStorage.setItem('student_session', JSON.stringify({ token: data.token, user: data.user, school: selectedSchool })); } catch {}
+      setScreen('dashboard');
+    } catch (e) {
+      showAlert('Error', 'Cannot connect to server.');
+    }
+    setLoading(false);
+  }
+
+  function doLogout() {
     setShowLogoutModal(true);
   }
 
-function confirmLogout() {
+  function confirmLogout() {
     setShowLogoutModal(false);
     setSession(null);
     setScreen('login');
@@ -113,12 +141,13 @@ function confirmLogout() {
     setAnnouncements([]);
     setAlerts([]);
   }
+
   // ── Pick school ──────────────────────────────────────────────────────────────
   if (screen === 'pickSchool') {
     return (
       <View style={[S.fill, { backgroundColor: C.canvas }]}>
         <ScrollView contentContainerStyle={S.pad}>
- ')}         <TouchableOpacity style={S.backBtn} onPress={() => setScreen('login>
+          <TouchableOpacity style={S.backBtn} onPress={() => setScreen('login')}>
             <Text style={S.backBtnTxt}>← Back</Text>
           </TouchableOpacity>
           <Text style={S.h1}>Select School</Text>
@@ -146,7 +175,6 @@ function confirmLogout() {
     return (
       <View style={[S.fill, { backgroundColor: C.canvas }]}>
         <ScrollView contentContainerStyle={S.pad} keyboardShouldPersistTaps="handled">
-
           <TouchableOpacity style={S.backBtn} onPress={() => router.back()}>
             <Text style={S.backBtnTxt}>← Home</Text>
           </TouchableOpacity>
@@ -158,7 +186,6 @@ function confirmLogout() {
             <Text style={S.loginSub}>Sign in to view your academic records</Text>
           </View>
 
-          {/* School selector */}
           {selectedSchool ? (
             <TouchableOpacity
               style={[S.schoolPill, { borderLeftColor: selectedSchool.theme_primary || C.green }]}
@@ -176,7 +203,6 @@ function confirmLogout() {
             </TouchableOpacity>
           )}
 
-          {/* Student ID */}
           <Text style={S.fieldLabel}>STUDENT ID</Text>
           <View style={S.fieldWrap}>
             <TextInput
@@ -189,7 +215,6 @@ function confirmLogout() {
             />
           </View>
 
-          {/* Password */}
           <Text style={S.fieldLabel}>PASSWORD</Text>
           <View style={S.fieldWrap}>
             <TextInput
@@ -205,7 +230,6 @@ function confirmLogout() {
             </TouchableOpacity>
           </View>
 
-          {/* Sign In */}
           <TouchableOpacity
             style={[S.signInBtn, { opacity: loading ? 0.7 : 1 }]}
             onPress={doLogin}
@@ -214,7 +238,6 @@ function confirmLogout() {
               ? <ActivityIndicator color={C.white} />
               : <Text style={S.signInBtnTxt}>Sign In →</Text>}
           </TouchableOpacity>
-
         </ScrollView>
       </View>
     );
@@ -242,6 +265,32 @@ function confirmLogout() {
 
   return (
     <View style={[S.fill, { backgroundColor: C.canvas }]}>
+
+      {/* Logout Modal */}
+      <Modal
+        visible={showLogoutModal}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setShowLogoutModal(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' }}>
+          <View style={{ backgroundColor: C.white, borderRadius: 16, padding: 24, margin: 24, width: '85%' }}>
+            <Text style={{ fontSize: 18, fontWeight: '800', color: C.navy, marginBottom: 8 }}>Sign Out</Text>
+            <Text style={{ fontSize: 14, color: C.grey, marginBottom: 24 }}>Are you sure you want to sign out?</Text>
+            <View style={{ flexDirection: 'row', gap: 12 }}>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: C.canvas, borderRadius: 10, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: C.border }}
+                onPress={() => setShowLogoutModal(false)}>
+                <Text style={{ color: C.greyDark, fontWeight: '700' }}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={{ flex: 1, backgroundColor: C.red, borderRadius: 10, padding: 14, alignItems: 'center' }}
+                onPress={confirmLogout}>
+                <Text style={{ color: C.white, fontWeight: '700' }}>Sign Out</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Header */}
       <View style={S.dashHeader}>
@@ -290,8 +339,6 @@ function confirmLogout() {
         ? <ActivityIndicator color={C.navy} size="large" style={{ marginTop: 48 }} />
         : (
           <ScrollView style={{ flex: 1, padding: 16 }}>
-
-            {/* Section heading */}
             <View style={S.secHead}>
               <Text style={[S.secHeadTxt, { color: activeColor }]}>
                 {TABS.find(t => t.id === tab)?.icon}  {TABS.find(t => t.id === tab)?.label?.toUpperCase()}
@@ -299,7 +346,6 @@ function confirmLogout() {
               <View style={[S.secHeadLine, { backgroundColor: activeColor }]} />
             </View>
 
-            {/* Overview */}
             {tab === 'home' && (
               <View style={S.statsGrid}>
                 {[
@@ -320,7 +366,6 @@ function confirmLogout() {
               </View>
             )}
 
-            {/* Attendance */}
             {tab === 'attendance' && (
               attendance.length === 0
                 ? <Empty icon="📅" msg="No attendance records yet." />
@@ -338,7 +383,6 @@ function confirmLogout() {
                   })
             )}
 
-            {/* Academic */}
             {tab === 'academic' && (
               academic.length === 0
                 ? <Empty icon="📚" msg="No academic reports yet." />
@@ -357,7 +401,6 @@ function confirmLogout() {
                   ))
             )}
 
-            {/* Homework */}
             {tab === 'homework' && (
               homework.length === 0
                 ? <Empty icon="📝" msg="No homework posted yet." />
@@ -372,7 +415,6 @@ function confirmLogout() {
                   ))
             )}
 
-            {/* Sports */}
             {tab === 'sports' && (
               sports.length === 0
                 ? <Empty icon="🏃" msg="No sports assessments yet." />
@@ -391,7 +433,6 @@ function confirmLogout() {
                   })
             )}
 
-            {/* Announcements */}
             {tab === 'announce' && (
               announcements.length === 0
                 ? <Empty icon="📢" msg="No announcements yet." />
@@ -405,7 +446,6 @@ function confirmLogout() {
                   ))
             )}
 
-            {/* Alerts */}
             {tab === 'alerts' && (
               alerts.length === 0
                 ? <Empty icon="🚨" msg="No alerts from school." />
@@ -421,26 +461,6 @@ function confirmLogout() {
             )}
 
             <View style={{ height: 48 }} />
-            {showLogoutModal && (
-              <View style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center', zIndex: 999 }}>
-                <View style={{ backgroundColor: C.white, borderRadius: 16, padding: 24, margin: 24, width: '85%' }}>
-                  <Text style={{ fontSize: 18, fontWeight: '800', color: C.navy, marginBottom: 8 }}>Sign Out</Text>
-                  <Text style={{ fontSize: 14, color: C.grey, marginBottom: 24 }}>Are you sure you want to sign out?</Text>
-                  <View style={{ flexDirection: 'row', gap: 12 }}>
-                    <TouchableOpacity
-                      style={{ flex: 1, backgroundColor: C.canvas, borderRadius: 10, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: C.border }}
-                      onPress={() => setShowLogoutModal(false)}>
-                      <Text style={{ color: C.greyDark, fontWeight: '700' }}>Cancel</Text>
-                    </TouchableOpacity>
-                    <TouchableOpacity
-                      style={{ flex: 1, backgroundColor: C.red, borderRadius: 10, padding: 14, alignItems: 'center' }}
-                      onPress={confirmLogout}>
-                      <Text style={{ color: C.white, fontWeight: '700' }}>Sign Out</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              </View>
-            )}
           </ScrollView>
         )}
     </View>
@@ -477,8 +497,8 @@ const S = StyleSheet.create({
   dashAvatarTxt:   { fontWeight: '900', fontSize: 15, color: C.white },
   dashName:        { fontSize: 15, fontWeight: '700', color: C.navy },
   dashSub:         { fontSize: 11, color: C.grey, marginTop: 2 },
-    signOutBtn:      { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
-    signOutBtnTxt:   { color: C.grey, fontSize: 12, fontWeight: '600' },
+  signOutBtn:      { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
+  signOutBtnTxt:   { color: C.grey, fontSize: 12, fontWeight: '600' },
   idStrip:         { paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
   idStripTxt:      { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
   tabBarWrap:      { backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 },
