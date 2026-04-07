@@ -124,9 +124,7 @@ export default function StudentDashboardScreen() {
   }
 
  function doLogout() {
-    if (window.confirm('Are you sure you want to sign out?')) {
-      confirmLogout();
-    }
+    setShowLogoutModal(true);
   }
 
   function confirmLogout() {
