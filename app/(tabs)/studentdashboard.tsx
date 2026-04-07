@@ -346,7 +346,7 @@ export default function StudentDashboardScreen() {
         <TouchableOpacity onPress={() => router.back()} style={{ width:36, height:36, borderRadius:10, backgroundColor:C.canvas, alignItems:'center', justifyContent:'center', borderWidth:1, borderColor:C.border }}>
           <Text style={{ fontSize:18, color:C.navy }}>←</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setShowProfile(true)} style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
+ <TouchableOpacity onPress={() => setShowProfile(true)} style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10, cursor: 'pointer' } as any}>
           <View style={S.dashAvatar}>
             <Text style={S.dashAvatarTxt}>
               {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
