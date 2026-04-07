@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Modal, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
 
@@ -124,9 +124,7 @@ export default function StudentDashboardScreen() {
     setLoading(false);
   }
 
-  function doLogout() {
-    setShowLogoutModal(true);
-  }
+  function doLogout() { setShowLogoutModal(true); }
 
   function confirmLogout() {
     setShowLogoutModal(false);
@@ -267,14 +265,13 @@ export default function StudentDashboardScreen() {
   return (
     <View style={[S.fill, { backgroundColor: C.canvas }]}>
 
-      {/* Logout Modal */}
-      <Modal
-        visible={showLogoutModal}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setShowLogoutModal(false)}>
-        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' }}>
-          <View style={{ backgroundColor: C.white, borderRadius: 16, padding: 24, margin: 24, width: '85%' }}>
+      {/* Logout overlay */}
+      {showLogoutModal && (
+        <TouchableOpacity
+          style={S.overlay}
+          activeOpacity={1}
+          onPress={() => setShowLogoutModal(false)}>
+          <TouchableOpacity activeOpacity={1} style={S.overlayBox}>
             <Text style={{ fontSize: 18, fontWeight: '800', color: C.navy, marginBottom: 8 }}>Sign Out</Text>
             <Text style={{ fontSize: 14, color: C.grey, marginBottom: 24 }}>Are you sure you want to sign out?</Text>
             <View style={{ flexDirection: 'row', gap: 12 }}>
@@ -289,26 +286,19 @@ export default function StudentDashboardScreen() {
                 <Text style={{ color: C.white, fontWeight: '700' }}>Sign Out</Text>
               </TouchableOpacity>
             </View>
-          </View>
-        </View>
-      </Modal>
+          </TouchableOpacity>
+        </TouchableOpacity>
+      )}
 
-      {/* Profile Slide-Up Modal */}
-      <Modal
-        visible={showProfile}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setShowProfile(false)}>
+      {/* Profile slide-up overlay */}
+      {showProfile && (
         <TouchableOpacity
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
+          style={S.overlay}
           activeOpacity={1}
           onPress={() => setShowProfile(false)}>
-          <View style={{ backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, height: '80%' }}>
-            {/* Handle bar */}
+          <TouchableOpacity activeOpacity={1} style={S.profileSheet}>
             <View style={{ width: 40, height: 4, backgroundColor: C.border, borderRadius: 2, alignSelf: 'center', marginBottom: 20 }} />
-
-            {/* Profile header */}
-            <View style={{ alignItems: 'center', marginBottom: 28 }}>
+            <View style={{ alignItems: 'center', marginBottom: 24 }}>
               <View style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: C.navy, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
                 <Text style={{ fontSize: 26, fontWeight: '900', color: C.white }}>
                   {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
@@ -317,8 +307,6 @@ export default function StudentDashboardScreen() {
               <Text style={{ fontSize: 20, fontWeight: '800', color: C.navy }}>{user?.name}</Text>
               <Text style={{ fontSize: 13, color: C.grey, marginTop: 4 }}>Student</Text>
             </View>
-
-            {/* Profile details */}
             <ScrollView showsVerticalScrollIndicator={false}>
               {[
                 { label: 'Student ID', value: user?.studentCode },
@@ -332,8 +320,6 @@ export default function StudentDashboardScreen() {
                   <Text style={{ fontSize: 14, color: C.navy, fontWeight: '700', maxWidth: '60%', textAlign: 'right' }}>{item.value || 'N/A'}</Text>
                 </View>
               ))}
-
-              {/* Stats summary */}
               <View style={{ marginTop: 24, backgroundColor: C.navyLight, borderRadius: 14, padding: 16 }}>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: C.navy, letterSpacing: 1, marginBottom: 12 }}>ACADEMIC SUMMARY</Text>
                 <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
@@ -349,12 +335,11 @@ export default function StudentDashboardScreen() {
                   ))}
                 </View>
               </View>
-
               <View style={{ height: 40 }} />
             </ScrollView>
-          </View>
+          </TouchableOpacity>
         </TouchableOpacity>
-      </Modal>
+      )}
 
       {/* Header */}
       <View style={S.dashHeader}>
@@ -585,4 +570,7 @@ const S = StyleSheet.create({
   gradeBox:        { alignItems: 'center', backgroundColor: C.navyLight, borderRadius: 10, padding: 10, minWidth: 52 },
   gradeNum:        { fontSize: 18, fontWeight: '900', color: C.navy },
   gradeLetter:     { fontSize: 11, color: C.grey, marginTop: 2 },
+  overlay:         { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999, justifyContent: 'center', alignItems: 'center' },
+  overlayBox:      { backgroundColor: C.white, borderRadius: 16, padding: 24, width: '85%' },
+  profileSheet:    { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, height: '80%' },
 });
