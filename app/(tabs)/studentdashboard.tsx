@@ -52,6 +52,7 @@ export default function StudentDashboardScreen() {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
     if (session) {
@@ -123,7 +124,7 @@ export default function StudentDashboardScreen() {
     setLoading(false);
   }
 
- function doLogout() {
+  function doLogout() {
     setShowLogoutModal(true);
   }
 
@@ -292,20 +293,85 @@ export default function StudentDashboardScreen() {
         </View>
       </Modal>
 
+      {/* Profile Slide-Up Modal */}
+      <Modal
+        visible={showProfile}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowProfile(false)}>
+        <TouchableOpacity
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' }}
+          activeOpacity={1}
+          onPress={() => setShowProfile(false)}>
+          <View style={{ backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, height: '80%' }}>
+            {/* Handle bar */}
+            <View style={{ width: 40, height: 4, backgroundColor: C.border, borderRadius: 2, alignSelf: 'center', marginBottom: 20 }} />
+
+            {/* Profile header */}
+            <View style={{ alignItems: 'center', marginBottom: 28 }}>
+              <View style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: C.navy, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+                <Text style={{ fontSize: 26, fontWeight: '900', color: C.white }}>
+                  {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
+                </Text>
+              </View>
+              <Text style={{ fontSize: 20, fontWeight: '800', color: C.navy }}>{user?.name}</Text>
+              <Text style={{ fontSize: 13, color: C.grey, marginTop: 4 }}>Student</Text>
+            </View>
+
+            {/* Profile details */}
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {[
+                { label: 'Student ID', value: user?.studentCode },
+                { label: 'Class', value: user?.class?.name },
+                { label: 'School', value: user?.school?.name },
+                { label: 'Email', value: user?.email || 'Not provided' },
+                { label: 'Phone', value: user?.phone || 'Not provided' },
+              ].map((item, i) => (
+                <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border }}>
+                  <Text style={{ fontSize: 12, color: C.grey, fontWeight: '600' }}>{item.label}</Text>
+                  <Text style={{ fontSize: 14, color: C.navy, fontWeight: '700', maxWidth: '60%', textAlign: 'right' }}>{item.value || 'N/A'}</Text>
+                </View>
+              ))}
+
+              {/* Stats summary */}
+              <View style={{ marginTop: 24, backgroundColor: C.navyLight, borderRadius: 14, padding: 16 }}>
+                <Text style={{ fontSize: 11, fontWeight: '700', color: C.navy, letterSpacing: 1, marginBottom: 12 }}>ACADEMIC SUMMARY</Text>
+                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
+                  {[
+                    { label: 'Attendance', count: attendance.length, color: C.green },
+                    { label: 'Grades', count: academic.length, color: C.navy },
+                    { label: 'Homework', count: homework.length, color: C.purple },
+                  ].map((s, i) => (
+                    <View key={i} style={{ alignItems: 'center' }}>
+                      <Text style={{ fontSize: 22, fontWeight: '900', color: s.color }}>{s.count}</Text>
+                      <Text style={{ fontSize: 10, color: C.grey, fontWeight: '600' }}>{s.label}</Text>
+                    </View>
+                  ))}
+                </View>
+              </View>
+
+              <View style={{ height: 40 }} />
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+
       {/* Header */}
       <View style={S.dashHeader}>
         <TouchableOpacity onPress={() => router.back()} style={{ width:36, height:36, borderRadius:10, backgroundColor:C.canvas, alignItems:'center', justifyContent:'center', borderWidth:1, borderColor:C.border }}>
           <Text style={{ fontSize:18, color:C.navy }}>←</Text>
         </TouchableOpacity>
-        <View style={S.dashAvatar}>
-          <Text style={S.dashAvatarTxt}>
-            {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
-          </Text>
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={S.dashName}>{user?.name}</Text>
-          <Text style={S.dashSub}>{user?.class?.name} · {user?.school?.name}</Text>
-        </View>
+        <TouchableOpacity onPress={() => setShowProfile(true)} style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
+          <View style={S.dashAvatar}>
+            <Text style={S.dashAvatarTxt}>
+              {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
+            </Text>
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={S.dashName}>{user?.name}</Text>
+            <Text style={S.dashSub}>{user?.class?.name} · {user?.school?.name}</Text>
+          </View>
+        </TouchableOpacity>
         <TouchableOpacity style={S.signOutBtn} onPress={doLogout}>
           <Text style={S.signOutBtnTxt}>Sign Out</Text>
         </TouchableOpacity>
