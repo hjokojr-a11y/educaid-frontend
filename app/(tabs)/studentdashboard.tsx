@@ -123,8 +123,10 @@ export default function StudentDashboardScreen() {
     setLoading(false);
   }
 
-  function doLogout() {
-    setShowLogoutModal(true);
+ function doLogout() {
+    if (window.confirm('Are you sure you want to sign out?')) {
+      confirmLogout();
+    }
   }
 
   function confirmLogout() {
