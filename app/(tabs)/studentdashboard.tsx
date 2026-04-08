@@ -306,7 +306,7 @@ export default function StudentDashboardScreen() {
 
       <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: '16px', paddingTop: '52px', gap: 12, borderBottom: `1px solid ${C.border}` } as any}>
         <button onClick={() => router.back()} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.canvas, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${C.border}`, cursor: 'pointer', fontSize: 18, color: C.navy } as any}>←</button>
-        <button onClick={() => setShowProfile(true)} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0 } as any}>
+        <button onClick={() => setShowProfile(true)} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flexGrow: 1, flexShrink: 1, flexBasis: 0, minWidth: 0, gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0 } as any}>
           <div style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: C.navy, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <span style={{ fontWeight: 900, fontSize: 15, color: C.white }}>
               {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
