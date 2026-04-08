@@ -51,7 +51,6 @@ export default function StudentDashboardScreen() {
   const [announcements, setAnnouncements] = useState<any[]>([]);
   const [alerts, setAlerts] = useState<any[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
 
   useEffect(() => {
@@ -124,21 +123,20 @@ export default function StudentDashboardScreen() {
     setLoading(false);
   }
 
-  function doLogout() { setShowLogoutModal(true); }
-
-  function confirmLogout() {
-    setShowLogoutModal(false);
-    setSession(null);
-    setScreen('login');
-    setStudentCode('');
-    setPassword('');
-    setTab('home');
-    setAttendance([]);
-    setAcademic([]);
-    setHomework([]);
-    setSports([]);
-    setAnnouncements([]);
-    setAlerts([]);
+  function doLogout() {
+    if (window.confirm('Are you sure you want to sign out?')) {
+      setSession(null);
+      setScreen('login');
+      setStudentCode('');
+      setPassword('');
+      setTab('home');
+      setAttendance([]);
+      setAcademic([]);
+      setHomework([]);
+      setSports([]);
+      setAnnouncements([]);
+      setAlerts([]);
+    }
   }
 
   if (screen === 'pickSchool') {
@@ -262,28 +260,6 @@ export default function StudentDashboardScreen() {
   return (
     <View style={[S.fill, { backgroundColor: C.canvas }]}>
 
-      {showLogoutModal && (
-        <View style={S.overlay} pointerEvents="box-none">
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowLogoutModal(false)} />
-          <View style={S.overlayBox}>
-            <Text style={{ fontSize: 18, fontWeight: '800', color: C.navy, marginBottom: 8 }}>Sign Out</Text>
-            <Text style={{ fontSize: 14, color: C.grey, marginBottom: 24 }}>Are you sure you want to sign out?</Text>
-            <View style={{ flexDirection: 'row', gap: 12 }}>
-              <TouchableOpacity
-                style={{ flex: 1, backgroundColor: C.canvas, borderRadius: 10, padding: 14, alignItems: 'center', borderWidth: 1, borderColor: C.border }}
-                onPress={() => setShowLogoutModal(false)}>
-                <Text style={{ color: C.greyDark, fontWeight: '700' }}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={{ flex: 1, backgroundColor: C.red, borderRadius: 10, padding: 14, alignItems: 'center' }}
-                onPress={confirmLogout}>
-                <Text style={{ color: C.white, fontWeight: '700' }}>Sign Out</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      )}
-
       {showProfile && (
         <View style={S.overlay} pointerEvents="box-none">
           <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowProfile(false)} />
@@ -336,7 +312,7 @@ export default function StudentDashboardScreen() {
         <TouchableOpacity onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.canvas, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border }}>
           <Text style={{ fontSize: 18, color: C.navy }}>←</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setShowProfile(true)} style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
+        <Pressable onPress={() => setShowProfile(true)} style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10 }}>
           <View style={S.dashAvatar}>
             <Text style={S.dashAvatarTxt}>
               {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
@@ -346,7 +322,7 @@ export default function StudentDashboardScreen() {
             <Text style={S.dashName}>{user?.name}</Text>
             <Text style={S.dashSub}>{user?.class?.name} · {user?.school?.name}</Text>
           </View>
-        </TouchableOpacity>
+        </Pressable>
         <TouchableOpacity style={S.signOutBtn} onPress={doLogout}>
           <Text style={S.signOutBtnTxt}>Sign Out</Text>
         </TouchableOpacity>
@@ -360,7 +336,7 @@ export default function StudentDashboardScreen() {
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={S.tabBarInner}>
           {TABS.map(t => {
             const isActive = tab === t.id;
-            const tColor   = COLORS[t.id];
+            const tColor = COLORS[t.id];
             return (
               <TouchableOpacity key={t.id}
                 style={[S.tabPill, isActive && { backgroundColor: tColor, borderColor: tColor }]}
@@ -506,58 +482,57 @@ export default function StudentDashboardScreen() {
 }
 
 const S = StyleSheet.create({
-  fill:            { flex: 1 },
-  pad:             { padding: 24, paddingTop: 60, paddingBottom: 48 },
-  backBtn:         { alignSelf: 'flex-start', backgroundColor: C.white, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: C.border, marginBottom: 24 },
-  backBtnTxt:      { color: C.greyDark, fontSize: 13, fontWeight: '600' },
-  h1:              { fontSize: 26, fontWeight: '800', color: C.navy, marginBottom: 4 },
-  h2:              { fontSize: 13, color: C.grey, marginBottom: 24 },
-  dot:             { width: 12, height: 12, borderRadius: 6, marginRight: 12 },
-  schoolCard:      { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border },
-  schoolCardName:  { fontSize: 15, fontWeight: '700', color: C.navy, marginBottom: 2 },
-  schoolCardSub:   { fontSize: 12, color: C.grey },
-  loginHeader:     { alignItems: 'center', marginBottom: 28, paddingTop: 8 },
-  loginIcon:       { width: 64, height: 64, borderRadius: 20, backgroundColor: C.navyLight, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
-  loginTitle:      { fontSize: 26, fontWeight: '800', color: C.navy, marginBottom: 6 },
-  loginSub:        { fontSize: 13, color: C.grey, textAlign: 'center' },
-  schoolPill:      { backgroundColor: C.white, borderRadius: 12, padding: 14, marginBottom: 24, borderWidth: 1, borderColor: C.border, borderLeftWidth: 4, flexDirection: 'row', alignItems: 'center' },
-  schoolPillName:  { fontSize: 14, fontWeight: '700', color: C.navy, marginBottom: 2 },
-  schoolPillSub:   { fontSize: 12, color: C.grey },
-  pickSchoolBtn:   { backgroundColor: C.white, borderRadius: 12, padding: 16, marginBottom: 24, alignItems: 'center', borderWidth: 1.5, borderColor: C.border },
-  pickSchoolBtnTxt:{ color: C.grey, fontSize: 14, fontWeight: '600' },
-  fieldLabel:      { fontSize: 10, fontWeight: '700', color: C.grey, letterSpacing: 1.2, marginBottom: 8 },
-  fieldWrap:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 12, borderWidth: 1.5, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 20 },
-  fieldInput:      { color: C.black, fontSize: 15 },
-  signInBtn:       { backgroundColor: C.navy, borderRadius: 14, padding: 17, alignItems: 'center' },
-  signInBtnTxt:    { color: C.white, fontSize: 16, fontWeight: '700' },
-  dashHeader:      { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: 16, paddingTop: 52, gap: 12, borderBottomWidth: 1, borderBottomColor: C.border },
-  dashAvatar:      { width: 44, height: 44, borderRadius: 14, backgroundColor: C.navy, alignItems: 'center', justifyContent: 'center' },
-  dashAvatarTxt:   { fontWeight: '900', fontSize: 15, color: C.white },
-  dashName:        { fontSize: 15, fontWeight: '700', color: C.navy },
-  dashSub:         { fontSize: 11, color: C.grey, marginTop: 2 },
-  signOutBtn:      { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
-  signOutBtnTxt:   { color: C.grey, fontSize: 12, fontWeight: '600' },
-  idStrip:         { paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
-  idStripTxt:      { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
-  tabBarWrap:      { backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 },
-  tabBarInner:     { paddingHorizontal: 16, gap: 8, flexDirection: 'row', alignItems: 'center' },
-  tabPill:         { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, backgroundColor: C.canvas, borderWidth: 1.5, borderColor: C.border },
-  tabPillTxt:      { fontSize: 12, fontWeight: '600', color: C.greyDark },
-  secHead:         { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16, marginTop: 4 },
-  secHeadTxt:      { fontSize: 11, fontWeight: '700', letterSpacing: 1.2 },
-  secHeadLine:     { flex: 1, height: 1.5, borderRadius: 1 },
-  statsGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
-  statCard:        { width: '30%', backgroundColor: C.white, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.border, borderTopWidth: 3, alignItems: 'center' },
-  statCount:       { fontSize: 26, fontWeight: '900', marginBottom: 4 },
-  statLabel:       { fontSize: 10, color: C.grey, fontWeight: '600', textAlign: 'center' },
-  card:            { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: C.border, borderLeftWidth: 3 },
-  cardTitle:       { fontSize: 14, fontWeight: '700', color: C.navy, marginBottom: 2 },
-  cardSub:         { fontSize: 11, color: C.grey },
-  cardNote:        { fontSize: 12, color: C.greyDark, marginTop: 4, lineHeight: 18 },
-  gradeBox:        { alignItems: 'center', backgroundColor: C.navyLight, borderRadius: 10, padding: 10, minWidth: 52 },
-  gradeNum:        { fontSize: 18, fontWeight: '900', color: C.navy },
-  gradeLetter:     { fontSize: 11, color: C.grey, marginTop: 2 },
-  overlay:         { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999, justifyContent: 'flex-end' },
-  overlayBox:      { backgroundColor: C.white, borderRadius: 16, padding: 24, width: '85%', alignSelf: 'center', marginBottom: 200 },
-  profileSheet:    { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: 600 },
+  fill:             { flex: 1 },
+  pad:              { padding: 24, paddingTop: 60, paddingBottom: 48 },
+  backBtn:          { alignSelf: 'flex-start', backgroundColor: C.white, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 9, borderWidth: 1, borderColor: C.border, marginBottom: 24 },
+  backBtnTxt:       { color: C.greyDark, fontSize: 13, fontWeight: '600' },
+  h1:               { fontSize: 26, fontWeight: '800', color: C.navy, marginBottom: 4 },
+  h2:               { fontSize: 13, color: C.grey, marginBottom: 24 },
+  dot:              { width: 12, height: 12, borderRadius: 6, marginRight: 12 },
+  schoolCard:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 14, padding: 16, marginBottom: 10, borderWidth: 1, borderColor: C.border },
+  schoolCardName:   { fontSize: 15, fontWeight: '700', color: C.navy, marginBottom: 2 },
+  schoolCardSub:    { fontSize: 12, color: C.grey },
+  loginHeader:      { alignItems: 'center', marginBottom: 28, paddingTop: 8 },
+  loginIcon:        { width: 64, height: 64, borderRadius: 20, backgroundColor: C.navyLight, alignItems: 'center', justifyContent: 'center', marginBottom: 14 },
+  loginTitle:       { fontSize: 26, fontWeight: '800', color: C.navy, marginBottom: 6 },
+  loginSub:         { fontSize: 13, color: C.grey, textAlign: 'center' },
+  schoolPill:       { backgroundColor: C.white, borderRadius: 12, padding: 14, marginBottom: 24, borderWidth: 1, borderColor: C.border, borderLeftWidth: 4, flexDirection: 'row', alignItems: 'center' },
+  schoolPillName:   { fontSize: 14, fontWeight: '700', color: C.navy, marginBottom: 2 },
+  schoolPillSub:    { fontSize: 12, color: C.grey },
+  pickSchoolBtn:    { backgroundColor: C.white, borderRadius: 12, padding: 16, marginBottom: 24, alignItems: 'center', borderWidth: 1.5, borderColor: C.border },
+  pickSchoolBtnTxt: { color: C.grey, fontSize: 14, fontWeight: '600' },
+  fieldLabel:       { fontSize: 10, fontWeight: '700', color: C.grey, letterSpacing: 1.2, marginBottom: 8 },
+  fieldWrap:        { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 12, borderWidth: 1.5, borderColor: C.border, paddingHorizontal: 16, paddingVertical: 14, marginBottom: 20 },
+  fieldInput:       { color: C.black, fontSize: 15 },
+  signInBtn:        { backgroundColor: C.navy, borderRadius: 14, padding: 17, alignItems: 'center' },
+  signInBtnTxt:     { color: C.white, fontSize: 16, fontWeight: '700' },
+  dashHeader:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: 16, paddingTop: 52, gap: 12, borderBottomWidth: 1, borderBottomColor: C.border },
+  dashAvatar:       { width: 44, height: 44, borderRadius: 14, backgroundColor: C.navy, alignItems: 'center', justifyContent: 'center' },
+  dashAvatarTxt:    { fontWeight: '900', fontSize: 15, color: C.white },
+  dashName:         { fontSize: 15, fontWeight: '700', color: C.navy },
+  dashSub:          { fontSize: 11, color: C.grey, marginTop: 2 },
+  signOutBtn:       { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
+  signOutBtnTxt:    { color: C.grey, fontSize: 12, fontWeight: '600' },
+  idStrip:          { paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
+  idStripTxt:       { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
+  tabBarWrap:       { backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 },
+  tabBarInner:      { paddingHorizontal: 16, gap: 8, flexDirection: 'row', alignItems: 'center' },
+  tabPill:          { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 20, backgroundColor: C.canvas, borderWidth: 1.5, borderColor: C.border },
+  tabPillTxt:       { fontSize: 12, fontWeight: '600', color: C.greyDark },
+  secHead:          { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16, marginTop: 4 },
+  secHeadTxt:       { fontSize: 11, fontWeight: '700', letterSpacing: 1.2 },
+  secHeadLine:      { flex: 1, height: 1.5, borderRadius: 1 },
+  statsGrid:        { flexDirection: 'row', flexWrap: 'wrap', gap: 10 },
+  statCard:         { width: '30%', backgroundColor: C.white, borderRadius: 14, padding: 14, borderWidth: 1, borderColor: C.border, borderTopWidth: 3, alignItems: 'center' },
+  statCount:        { fontSize: 26, fontWeight: '900', marginBottom: 4 },
+  statLabel:        { fontSize: 10, color: C.grey, fontWeight: '600', textAlign: 'center' },
+  card:             { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 12, padding: 14, marginBottom: 8, borderWidth: 1, borderColor: C.border, borderLeftWidth: 3 },
+  cardTitle:        { fontSize: 14, fontWeight: '700', color: C.navy, marginBottom: 2 },
+  cardSub:          { fontSize: 11, color: C.grey },
+  cardNote:         { fontSize: 12, color: C.greyDark, marginTop: 4, lineHeight: 18 },
+  gradeBox:         { alignItems: 'center', backgroundColor: C.navyLight, borderRadius: 10, padding: 10, minWidth: 52 },
+  gradeNum:         { fontSize: 18, fontWeight: '900', color: C.navy },
+  gradeLetter:      { fontSize: 11, color: C.grey, marginTop: 2 },
+  overlay:          { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999, justifyContent: 'flex-end' },
+  profileSheet:     { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: 600 },
 });
