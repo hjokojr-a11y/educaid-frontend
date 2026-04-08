@@ -1,6 +1,6 @@
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 
 const API_URL = "https://elegant-eagerness-production-2114.up.railway.app";
 
@@ -261,72 +261,64 @@ export default function StudentDashboardScreen() {
     <View style={[S.fill, { backgroundColor: C.canvas }]}>
 
       {showProfile && (
-        <View style={S.overlay} pointerEvents="box-none">
-          <Pressable style={StyleSheet.absoluteFill} onPress={() => setShowProfile(false)} />
-          <View style={S.profileSheet}>
-            <View style={{ width: 40, height: 4, backgroundColor: C.border, borderRadius: 2, alignSelf: 'center', marginBottom: 20 }} />
-            <View style={{ alignItems: 'center', marginBottom: 24 }}>
-              <View style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: C.navy, alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
-                <Text style={{ fontSize: 26, fontWeight: '900', color: C.white }}>
+        <div onClick={() => setShowProfile(false)} style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' } as any}>
+          <div onClick={(e) => e.stopPropagation()} style={{ backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: '80vh', overflowY: 'auto' } as any}>
+            <div style={{ width: 40, height: 4, backgroundColor: C.border, borderRadius: 2, margin: '0 auto 20px' }} />
+            <div style={{ textAlign: 'center', marginBottom: 24 }}>
+              <div style={{ width: 72, height: 72, borderRadius: 22, backgroundColor: C.navy, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 12px' }}>
+                <span style={{ fontSize: 26, fontWeight: 900, color: C.white }}>
                   {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
-                </Text>
-              </View>
-              <Text style={{ fontSize: 20, fontWeight: '800', color: C.navy }}>{user?.name}</Text>
-              <Text style={{ fontSize: 13, color: C.grey, marginTop: 4 }}>Student</Text>
-            </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-              {[
-                { label: 'Student ID', value: user?.studentCode },
-                { label: 'Class', value: user?.class?.name },
-                { label: 'School', value: user?.school?.name },
-                { label: 'Email', value: user?.email || 'Not provided' },
-                { label: 'Phone', value: user?.phone || 'Not provided' },
-              ].map((item, i) => (
-                <View key={i} style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 14, borderBottomWidth: 1, borderBottomColor: C.border }}>
-                  <Text style={{ fontSize: 12, color: C.grey, fontWeight: '600' }}>{item.label}</Text>
-                  <Text style={{ fontSize: 14, color: C.navy, fontWeight: '700', maxWidth: '60%', textAlign: 'right' }}>{item.value || 'N/A'}</Text>
-                </View>
-              ))}
-              <View style={{ marginTop: 24, backgroundColor: C.navyLight, borderRadius: 14, padding: 16 }}>
-                <Text style={{ fontSize: 11, fontWeight: '700', color: C.navy, letterSpacing: 1, marginBottom: 12 }}>ACADEMIC SUMMARY</Text>
-                <View style={{ flexDirection: 'row', justifyContent: 'space-between' }}>
-                  {[
-                    { label: 'Attendance', count: attendance.length, color: C.green },
-                    { label: 'Grades', count: academic.length, color: C.navy },
-                    { label: 'Homework', count: homework.length, color: C.purple },
-                  ].map((s, i) => (
-                    <View key={i} style={{ alignItems: 'center' }}>
-                      <Text style={{ fontSize: 22, fontWeight: '900', color: s.color }}>{s.count}</Text>
-                      <Text style={{ fontSize: 10, color: C.grey, fontWeight: '600' }}>{s.label}</Text>
-                    </View>
-                  ))}
-                </View>
-              </View>
-              <View style={{ height: 40 }} />
-            </ScrollView>
-          </View>
-        </View>
+                </span>
+              </div>
+              <div style={{ fontSize: 20, fontWeight: 800, color: C.navy }}>{user?.name}</div>
+              <div style={{ fontSize: 13, color: C.grey, marginTop: 4 }}>Student</div>
+            </div>
+            {[
+              { label: 'Student ID', value: user?.studentCode },
+              { label: 'Class', value: user?.class?.name },
+              { label: 'School', value: user?.school?.name },
+              { label: 'Email', value: user?.email || 'Not provided' },
+              { label: 'Phone', value: user?.phone || 'Not provided' },
+            ].map((item, i) => (
+              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 14, paddingBottom: 14, borderBottom: `1px solid ${C.border}` }}>
+                <span style={{ fontSize: 12, color: C.grey, fontWeight: 600 }}>{item.label}</span>
+                <span style={{ fontSize: 14, color: C.navy, fontWeight: 700 }}>{item.value || 'N/A'}</span>
+              </div>
+            ))}
+            <div style={{ marginTop: 24, backgroundColor: C.navyLight, borderRadius: 14, padding: 16 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: C.navy, letterSpacing: 1, marginBottom: 12 }}>ACADEMIC SUMMARY</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                {[
+                  { label: 'Attendance', count: attendance.length, color: C.green },
+                  { label: 'Grades', count: academic.length, color: C.navy },
+                  { label: 'Homework', count: homework.length, color: C.purple },
+                ].map((s, i) => (
+                  <div key={i} style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: 22, fontWeight: 900, color: s.color }}>{s.count}</div>
+                    <div style={{ fontSize: 10, color: C.grey, fontWeight: 600 }}>{s.label}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
-      <View style={S.dashHeader}>
-        <TouchableOpacity onPress={() => router.back()} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.canvas, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.border }}>
-          <Text style={{ fontSize: 18, color: C.navy }}>←</Text>
-        </TouchableOpacity>
-       <View onClick={() => setShowProfile(true)} style={{ flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10, cursor: 'pointer' } as any}>
-          <View style={S.dashAvatar}>
-            <Text style={S.dashAvatarTxt}>
+      <div style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: '16px', paddingTop: '52px', gap: 12, borderBottom: `1px solid ${C.border}` } as any}>
+        <button onClick={() => router.back()} style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: C.canvas, display: 'flex', alignItems: 'center', justifyContent: 'center', border: `1px solid ${C.border}`, cursor: 'pointer', fontSize: 18, color: C.navy } as any}>←</button>
+        <button onClick={() => setShowProfile(true)} style={{ display: 'flex', flexDirection: 'row', alignItems: 'center', flex: 1, gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: 0 } as any}>
+          <div style={{ width: 44, height: 44, borderRadius: 14, backgroundColor: C.navy, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontWeight: 900, fontSize: 15, color: C.white }}>
               {user?.name?.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase() || '?'}
-            </Text>
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={S.dashName}>{user?.name}</Text>
-            <Text style={S.dashSub}>{user?.class?.name} · {user?.school?.name}</Text>
-          </View>
-        </View>
-        <TouchableOpacity style={S.signOutBtn} onPress={doLogout}>
-          <Text style={S.signOutBtnTxt}>Sign Out</Text>
-        </TouchableOpacity>
-      </View>
+            </span>
+          </div>
+          <div style={{ flex: 1, textAlign: 'left' } as any}>
+            <div style={{ fontSize: 15, fontWeight: 700, color: C.navy }}>{user?.name}</div>
+            <div style={{ fontSize: 11, color: C.grey, marginTop: 2 }}>{user?.class?.name} · {user?.school?.name}</div>
+          </div>
+        </button>
+        <button onClick={doLogout} style={{ backgroundColor: C.canvas, borderRadius: 8, padding: '8px 12px', border: `1px solid ${C.border}`, cursor: 'pointer', color: C.grey, fontSize: 12, fontWeight: 600 } as any}>Sign Out</button>
+      </div>
 
       <View style={[S.idStrip, { backgroundColor: C.green + '14' }]}>
         <Text style={[S.idStripTxt, { color: C.green }]}>Student ID: {user?.studentCode}</Text>
@@ -506,13 +498,6 @@ const S = StyleSheet.create({
   fieldInput:       { color: C.black, fontSize: 15 },
   signInBtn:        { backgroundColor: C.navy, borderRadius: 14, padding: 17, alignItems: 'center' },
   signInBtnTxt:     { color: C.white, fontSize: 16, fontWeight: '700' },
-  dashHeader:       { flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, padding: 16, paddingTop: 52, gap: 12, borderBottomWidth: 1, borderBottomColor: C.border },
-  dashAvatar:       { width: 44, height: 44, borderRadius: 14, backgroundColor: C.navy, alignItems: 'center', justifyContent: 'center' },
-  dashAvatarTxt:    { fontWeight: '900', fontSize: 15, color: C.white },
-  dashName:         { fontSize: 15, fontWeight: '700', color: C.navy },
-  dashSub:          { fontSize: 11, color: C.grey, marginTop: 2 },
-  signOutBtn:       { backgroundColor: C.canvas, borderRadius: 8, padding: 8, paddingHorizontal: 12, borderWidth: 1, borderColor: C.border },
-  signOutBtnTxt:    { color: C.grey, fontSize: 12, fontWeight: '600' },
   idStrip:          { paddingHorizontal: 16, paddingVertical: 8, borderBottomWidth: 1, borderBottomColor: C.border },
   idStripTxt:       { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
   tabBarWrap:       { backgroundColor: C.white, borderBottomWidth: 1, borderBottomColor: C.border, paddingVertical: 10 },
@@ -533,6 +518,5 @@ const S = StyleSheet.create({
   gradeBox:         { alignItems: 'center', backgroundColor: C.navyLight, borderRadius: 10, padding: 10, minWidth: 52 },
   gradeNum:         { fontSize: 18, fontWeight: '900', color: C.navy },
   gradeLetter:      { fontSize: 11, color: C.grey, marginTop: 2 },
-  overlay:          { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999, justifyContent: 'flex-end' },
-  profileSheet:     { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: 600 },
+  idStripTxt2:      { fontSize: 11, fontWeight: '700', letterSpacing: 0.5 },
 });
