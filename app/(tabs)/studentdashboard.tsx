@@ -567,3 +567,4 @@ const S = StyleSheet.create({
 overlay:      { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0,0,0,0.5)', zIndex: 999, justifyContent: 'flex-end' },
   overlayBox:   { backgroundColor: C.white, borderRadius: 16, padding: 24, width: '85%', alignSelf: 'center' },
   profileSheet: { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 24, maxHeight: 600 },
+  });
