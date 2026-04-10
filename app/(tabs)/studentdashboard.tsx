@@ -317,7 +317,8 @@ export default function StudentDashboardScreen() {
             <div style={{ fontSize: 11, color: C.grey, marginTop: 2 }}>{user?.class?.name} · {user?.school?.name}</div>
           </div>
         </button>
-        <button onClick={doLogout} style={{ backgroundColor: C.canvas, borderRadius: 8, padding: '8px 12px', border: `1px solid ${C.border}`, cursor: 'pointer', color: C.grey, fontSize: 12, fontWeight: 600 } as any}>Sign Out</button>
+       <button onClick={() => loadData(session.token, session.user.id)} style={{ backgroundColor: C.canvas, borderRadius: 8, padding: '8px 12px', border: `1px solid ${C.border}`, cursor: 'pointer', color: C.grey, fontSize: 12, fontWeight: 600, marginRight: 8 } as any}>↺</button>
+<button onClick={doLogout} style={{ backgroundColor: C.canvas, borderRadius: 8, padding: '8px 12px', border: `1px solid ${C.border}`, cursor: 'pointer', color: C.grey, fontSize: 12, fontWeight: 600 } as any}>Sign Out</button>
       </div>
 
       <View style={[S.idStrip, { backgroundColor: C.green + '14' }]}>
